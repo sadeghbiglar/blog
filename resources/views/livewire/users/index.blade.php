@@ -4,36 +4,53 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 use Livewire\Volt\Component;
 use Mary\Traits\Toast;
-
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator; 
+use Livewire\WithPagination; 
+use App\Models\Country;  
 new class extends Component {
     use Toast;
-
+    use WithPagination; 
     public string $search = '';
 
     public bool $drawer = false;
-
+    public int $country_id = 0; 
     public array $sortBy = ['column' => 'name', 'direction' => 'asc'];
-
+    // Reset pagination when any component property changes
+    public function updated($property): void
+    {
+    if (! is_array($property) && $property != "") {
+        $this->resetPage();
+    }
+    }
     // Clear filters
     public function clear(): void
     {
-        $this->reset();
-        $this->success('Filters cleared.', position: 'toast-bottom');
+    $this->reset();
+    $this->resetPage(); 
+    $this->success('Filters cleared.', position: 'toast-bottom');
     }
 
     // Delete action
-    public function delete($id): void
+    // public function delete($id): void
+    // {
+    //     $this->warning("Will delete #$id", 'It is fake.', position: 'toast-bottom');
+    // }
+    public function delete(User $user): void
     {
-        $this->warning("Will delete #$id", 'It is fake.', position: 'toast-bottom');
+    $user->delete();
+    $this->warning("$user->name deleted", 'Good bye!', position: 'toast-bottom');
     }
-
     // Table headers
     public function headers(): array
     {
         return [
             ['key' => 'id', 'label' => '#', 'class' => 'w-1'],
             ['key' => 'name', 'label' => 'Name', 'class' => 'w-64'],
-            ['key' => 'age', 'label' => 'Age', 'class' => 'w-20'],
+            // ['key' => 'age', 'label' => 'Age', 'class' => 'w-20'],
+            // ['key' => 'country.name', 'label' => 'Country'],
+            // ['key' => 'country_name', 'label' => 'Country'],
+            ['key' => 'country_name', 'label' => 'Country', 'class' => 'hidden lg:table-cell'], 
             ['key' => 'email', 'label' => 'E-mail', 'sortable' => false],
         ];
     }
@@ -44,24 +61,24 @@ new class extends Component {
      * On real projects you do it with Eloquent collections.
      * Please, refer to maryUI docs to see the eloquent examples.
      */
-    public function users(): Collection
-    {
-        return collect([
-            ['id' => 1, 'name' => 'Mary', 'email' => 'mary@mary-ui.com', 'age' => 23],
-            ['id' => 2, 'name' => 'Giovanna', 'email' => 'giovanna@mary-ui.com', 'age' => 7],
-            ['id' => 3, 'name' => 'Marina', 'email' => 'marina@mary-ui.com', 'age' => 5],
-        ])
-            ->sortBy([[...array_values($this->sortBy)]])
-            ->when($this->search, function (Collection $collection) {
-                return $collection->filter(fn(array $item) => str($item['name'])->contains($this->search, true));
-            });
-    }
+//   public function users(): Collection
+public function users(): LengthAwarePaginator 
+{
+    return User::query()
+        ->withAggregate('country', 'name') 
+        ->when($this->search, fn(Builder $q) => $q->where('name', 'like', "%$this->search%"))
+        ->when($this->country_id, fn(Builder $q) => $q->where('country_id', $this->country_id)) 
+        ->orderBy(...array_values($this->sortBy))
+        // ->get();
+        ->paginate(5); // No more `->get()` 
+}
 
     public function with(): array
     {
         return [
             'users' => $this->users(),
-            'headers' => $this->headers()
+            'headers' => $this->headers(),
+            'countries' => Country::all(), 
         ];
     }
 }; ?>
@@ -79,7 +96,7 @@ new class extends Component {
 
     <!-- TABLE  -->
     <x-card shadow>
-        <x-table :headers="$headers" :rows="$users" :sort-by="$sortBy">
+        <x-table :headers="$headers" :rows="$users" :sort-by="$sortBy" with-pagination>
             @scope('actions', $user)
             <x-button icon="o-trash" wire:click="delete({{ $user['id'] }})" wire:confirm="Are you sure?" spinner class="btn-ghost btn-sm text-error" />
             @endscope
@@ -89,6 +106,7 @@ new class extends Component {
     <!-- FILTER DRAWER -->
     <x-drawer wire:model="drawer" title="Filters" right separator with-close-button class="lg:w-1/3">
         <x-input placeholder="Search..." wire:model.live.debounce="search" icon="o-magnifying-glass" @keydown.enter="$wire.drawer = false" />
+        <x-select placeholder="Country" wire:model.live="country_id" :options="$countries" icon="o-flag" placeholder-value="0" /> 
 
         <x-slot:actions>
             <x-button label="Reset" icon="o-x-mark" wire:click="clear" spinner />
