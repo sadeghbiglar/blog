@@ -70,7 +70,7 @@ new class extends Component {
 <div>
   <x-header title="Update {{ $user->name }}" separator />
   <!-- Grid stuff from Tailwind -->
-    <div class="grid gap-5 lg:grid-cols-2"> 
+    <div class="grid gap-5 "> 
         <div>
     <x-form wire:submit="save"> 
            {{--  Basic section  --}}
@@ -126,9 +126,6 @@ new class extends Component {
         </x-slot:actions>
     </x-form>
       </div>  
-        <div>
-            {{-- Get a nice picture from `StorySet` web site --}}
-            <img src="/edit-form.jpg" width="450" class="mx-auto" />
-        </div>
+        
     </div>
 </div>
