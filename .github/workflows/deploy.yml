@@ -1,0 +1,35 @@
+name: 🚀 Deploy Laravel App
+
+on:
+  push:
+    branches:
+      - main  # یا هر شاخه‌ای که می‌خوای
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: 🔐 Setup SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        ssh-keyscan -H 31.56.146.19 >> ~/.ssh/known_hosts
+
+    - name: 🚀 Deploy to server
+      run: |
+        ssh -i ~/.ssh/id_ed25519 root@31.56.146.19 << 'EOF'
+          cd /var/www/blog
+          git pull origin main
+          composer install --no-interaction --prefer-dist --optimize-autoloader
+          php artisan migrate --force
+          npm install
+          npm run build
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+        EOF
