@@ -3,7 +3,7 @@ name: 🚀 Deploy Laravel App
 on:
   push:
     branches:
-      - main  # یا هر شاخه‌ای که می‌خوای
+      - main
 
 jobs:
   deploy:
@@ -25,10 +25,22 @@ jobs:
         ssh -i ~/.ssh/id_ed25519 root@31.56.146.19 << 'EOF'
           cd /var/www/blog
           git pull origin main
+
+          # ✅ Fix permissions
+          chown -R www-data:www-data storage
+          chown -R www-data:www-data bootstrap/cache
+
+          # 📦 Install dependencies
           composer install --no-interaction --prefer-dist --optimize-autoloader
+
+          # 🛠️ Run migrations
           php artisan migrate --force
+
+          # 🧰 Build frontend
           npm install
           npm run build
+
+          # 🔧 Laravel caches
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
