@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Support\Collection;
 use Livewire\Volt\Component;
 use Mary\Traits\Toast;
@@ -12,9 +13,11 @@ new class extends Component {
     use Toast;
     use WithPagination; 
     public string $search = '';
-
+    public bool $roleDrawer = false;
     public bool $drawer = false;
     public int $country_id = 0; 
+    public array $selected_roles = [];
+    public int $user_id = 0;
     public array $sortBy = ['column' => 'name', 'direction' => 'asc'];
     // Reset pagination when any component property changes
     public function updated($property): void
@@ -30,7 +33,22 @@ new class extends Component {
     $this->resetPage(); 
     $this->success('Filters cleared.', position: 'toast-bottom');
     }
-
+// Show role assignment form
+    public function showRoleForm($user_id): void
+    {
+        $this->user_id = $user_id;
+        $user = User::findOrFail($user_id);
+        $this->selected_roles = $user->roles->pluck('id')->toArray();
+        $this->roleDrawer = true;
+    }
+    // Save roles for user
+    public function saveRoles(): void
+    {
+        $user = User::findOrFail($this->user_id);
+        $user->roles()->sync($this->selected_roles);
+        $this->success('Roles updated.', position: 'toast-bottom');
+        $this->roleDrawer = false;
+    }
     // Delete action
     // public function delete($id): void
     // {
@@ -53,6 +71,7 @@ new class extends Component {
             // ['key' => 'country_name', 'label' => 'Country'],
             ['key' => 'country_name', 'label' => 'Country', 'class' => 'hidden lg:table-cell'], 
             ['key' => 'email', 'label' => 'E-mail', 'sortable' => false],
+            ['key' => 'roles', 'label' => 'Roles', 'class' => 'hidden lg:table-cell'],
         ];
     }
 
@@ -67,6 +86,7 @@ public function users(): LengthAwarePaginator
 {
     return User::query()
         ->withAggregate('country', 'name') 
+        ->with('roles')
         ->when($this->search, fn(Builder $q) => $q->where('name', 'like', "%$this->search%"))
         ->when($this->country_id, fn(Builder $q) => $q->where('country_id', $this->country_id)) 
         ->orderBy(...array_values($this->sortBy))
@@ -80,6 +100,7 @@ public function users(): LengthAwarePaginator
             'users' => $this->users(),
             'headers' => $this->headers(),
             'countries' => Country::all(), 
+            'roles' => Role::all(),
         ];
     }
 }; ?>
@@ -98,11 +119,22 @@ public function users(): LengthAwarePaginator
 
     <!-- TABLE  -->
     <x-card shadow>
-        <x-table :headers="$headers" :rows="$users" :sort-by="$sortBy" with-pagination  link="users/{id}/edit?name={name}&city={city.name}">
-            @scope('cell_avatar', $user)                                                    
+       <x-table :headers="$headers" :rows="$users" :sort-by="$sortBy" with-pagination  >
+
+        @scope('cell_avatar', $user)                                                    
            <x-avatar image="{{ $user->avatar ?? '/empty-user.jpg' }}" class="!w-10" />
             @endscope
+            @scope('cell_roles', $user)
+                <div class="flex gap-2">
+                    @foreach ($user->roles as $role)
+                        <x-badge :value="$role->name" class="badge-primary badge-soft" />
+                    @endforeach
+                </div>
+            @endscope
+
             @scope('actions', $user)
+            <x-button icon="o-pencil" link="users/{{ $user->id }}/edit?name={{ $user->name }}" class="btn-ghost btn-sm" />
+            <x-button icon="o-user" wire:click="showRoleForm({{ $user->id }})" class="btn-ghost btn-sm" />
             <x-button icon="o-trash" wire:click="delete({{ $user['id'] }})" wire:confirm="Are you sure?" spinner class="btn-ghost btn-sm text-error" />
             @endscope
         </x-table>
@@ -116,6 +148,23 @@ public function users(): LengthAwarePaginator
         <x-slot:actions>
             <x-button label="Reset" icon="o-x-mark" wire:click="clear" spinner />
             <x-button label="Done" icon="o-check" class="btn-primary" @click="$wire.drawer = false" />
+        </x-slot:actions>
+    </x-drawer>
+    <!-- ROLE ASSIGNMENT DRAWER -->
+    <x-drawer wire:model="roleDrawer" title="Assign Roles" right separator with-close-button class="lg:w-1/3">
+        <x-choices
+            label="Roles"
+            wire:model="selected_roles"
+            :options="$roles"
+            option-value="id"
+            option-label="name"
+            icon="o-user"
+            hint="Select roles for the user"
+            multiple
+        />
+        <x-slot:actions>
+            <x-button label="Cancel" @click="$wire.roleDrawer = false" />
+            <x-button label="Save" wire:click="saveRoles" class="btn-primary" spinner />
         </x-slot:actions>
     </x-drawer>
 </div>
