@@ -16,8 +16,7 @@ class extends Component {
 
     public string $search = '';
     public array $sortBy = ['column' => 'published_at', 'direction' => 'desc'];
-  
-    // Fetch posts with pagination
+
     public function posts(): LengthAwarePaginator
     {
         return Post::query()

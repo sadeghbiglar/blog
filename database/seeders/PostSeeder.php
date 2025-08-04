@@ -2,50 +2,54 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
+
 class PostSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-   public function run(): void
+    public function run(): void
     {
-        $users = User::all();
+        // Find a writer user
+        $writer = User::whereHas('roles', fn($query) => $query->where('name', 'writer'))->first();
 
-        if ($users->isEmpty()) {
-            $user = User::create([
-                'name' => 'Test User',
-                'email' => 'test@example.com',
-                'password' => bcrypt('password'),
-            ]);
-        } else {
-            $user = $users->first();
+        if (!$writer) {
+            throw new \Exception('No user with role "writer" found. Please run RoleSeeder first.');
         }
 
+        // Create posts
         Post::create([
-            'title' => 'First Blog Post',
-            'slug' => Str::slug('First Blog Post'),
-            'content' => 'This is the content of the first blog post.',
-            'user_id' => $user->id,
-            'image' => 'posts/sample-image.jpg',
+            'title' => 'Introduction to Laravel',
+            'slug' => Str::slug('Introduction to Laravel'),
+            'content' => 'This post introduces the Laravel framework and its features.',
+            'user_id' => $writer->id,
+            'image' => 'posts/laravel.jpg',
             'published_at' => now(),
-            'views' => 100,
+            'views' => 150,
+            'likes' => 20,
+        ]);
+
+        Post::create([
+            'title' => 'Getting Started with Livewire',
+            'slug' => Str::slug('Getting Started with Livewire'),
+            'content' => 'Learn how to build dynamic interfaces with Livewire.',
+            'user_id' => $writer->id,
+            'image' => 'posts/livewire.jpg',
+            'published_at' => now()->subDay(),
+            'views' => 80,
             'likes' => 10,
         ]);
 
         Post::create([
-            'title' => 'Second Blog Post',
-            'slug' => Str::slug('Second Blog Post'),
-            'content' => 'This is the content of the second blog post.',
-            'user_id' => $user->id,
-            'image' => 'posts/sample-image2.jpg',
-            'published_at' => now(),
-            'views' => 50,
-            'likes' => 5,
+            'title' => 'Draft Post Example',
+            'slug' => Str::slug('Draft Post Example'),
+            'content' => 'This is a draft post, not yet published.',
+            'user_id' => $writer->id,
+            'image' => 'posts/draft.jpg',
+            'published_at' => null,
+            'views' => 0,
+            'likes' => 0,
         ]);
     }
 }

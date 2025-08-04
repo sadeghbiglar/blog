@@ -34,11 +34,8 @@ jobs:
           composer install --no-interaction --prefer-dist --optimize-autoloader
 
           # 🛠️ Run migrations
-          php artisan migrate --force
-          php artisan migrate:fresh
-          php artisan db:seed
-          php artisan db:seed --class=PostSeeder
-          php artisan db:seed --class=RoleSeeder
+          php artisan migrate:fresh --seed 
+          
           # 🧰 Build frontend
           npm install
           npm run build
@@ -47,4 +44,5 @@ jobs:
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
+          php artisan optimize
         EOF

@@ -2,47 +2,61 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Database\Seeder;
+
 class RoleSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        User::create([
-            'name' => 'Sadegh biglar',
-            'email' => 'sbmail555@gmail.com',
-            'password' => bcrypt('12345678'),
-        ]);
+        // Create roles
         $roles = [
             ['name' => 'admin', 'description' => 'Administrator with full access'],
             ['name' => 'writer', 'description' => 'Writer who can create and manage posts'],
+            ['name' => 'senior_writer', 'description' => 'Senior writer who can edit all posts'],
             ['name' => 'user', 'description' => 'Regular user with basic access'],
         ];
 
         foreach ($roles as $role) {
-            Role::create($role);
+            Role::firstOrCreate(['name' => $role['name']], $role);
         }
 
-        // Assign 'user' role to all existing users
-        $userRole = Role::where('name', 'user')->first();
-        $users = User::all();
+        // Create users and assign roles
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'Admin User',
+                'password' => bcrypt('password'),
+            ]
+        );
+        $admin->roles()->sync(Role::where('name', 'admin')->first()->id);
 
-        foreach ($users as $user) {
-            $user->roles()->attach($userRole->id);
-        }
+        $writer = User::firstOrCreate(
+            ['email' => 'writer@example.com'],
+            [
+                'name' => 'Writer User',
+                'password' => bcrypt('password'),
+            ]
+        );
+        $writer->roles()->sync(Role::where('name', 'writer')->first()->id);
 
-        // Create an admin user for testing
-        $admin = User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
-            'password' => bcrypt('password'),
-        ]);
-        $adminRole = Role::where('name', 'admin')->first();
-        $admin->roles()->attach($adminRole->id);
+        $seniorWriter = User::firstOrCreate(
+            ['email' => 'senior_writer@example.com'],
+            [
+                'name' => 'Senior Writer',
+                'password' => bcrypt('password'),
+            ]
+        );
+        $seniorWriter->roles()->sync(Role::where('name', 'senior_writer')->first()->id);
+
+        $user = User::firstOrCreate(
+            ['email' => 'sbmail555@gmail.com'],
+            [
+                'name' => 'Sadegh Biglar',
+                'password' => bcrypt('12345678'),
+            ]
+        );
+        $user->roles()->sync(Role::where('name', 'user')->first()->id);
     }
 }
