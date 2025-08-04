@@ -19,6 +19,13 @@ new class extends Component {
     public array $selected_roles = [];
     public int $user_id = 0;
     public array $sortBy = ['column' => 'name', 'direction' => 'asc'];
+    public function mount(): void
+    {
+        if (!auth()->user()->hasRole('admin')) {
+            $this->error('You are not authorized to access this page.', position: 'toast-bottom');
+            redirect()->route('dashboard');
+        }
+    }
     // Reset pagination when any component property changes
     public function updated($property): void
     {

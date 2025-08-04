@@ -17,7 +17,13 @@ new class extends Component {
     public bool $drawer = false;
     public int $user_id = 0;
     public array $sortBy = ['column' => 'published_at', 'direction' => 'desc'];
-
+    public function mount(): void
+    {
+        if (!auth()->user()->hasRole('writer')) {
+            $this->error('You are not authorized to access this page.', position: 'toast-bottom');
+            redirect()->route('dashboard');
+        }
+    }
     // Reset pagination when any component property changes
     public function updated($property): void
     {

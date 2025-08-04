@@ -13,6 +13,11 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
+        User::create([
+            'name' => 'Sadegh biglar',
+            'email' => 'sbmail555@gmail.com',
+            'password' => bcrypt('12345678'),
+        ]);
         $roles = [
             ['name' => 'admin', 'description' => 'Administrator with full access'],
             ['name' => 'writer', 'description' => 'Writer who can create and manage posts'],

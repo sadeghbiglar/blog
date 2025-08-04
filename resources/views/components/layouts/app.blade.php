@@ -54,13 +54,21 @@
                 @endif
 
                
-                <x-menu-item title="Home" icon="o-sparkles" link="/" /> 
-                <x-menu-item title="Users" icon="o-users" link="/users" /> 
-                <x-menu-item title="Posts" icon="o-adjustments-horizontal" link="/posts" /> 
-                <x-menu-sub title="Settings" icon="o-cog-6-tooth">
-                    <x-menu-item title="Wifi" icon="o-wifi" link="####" />
-                    <x-menu-item title="Archives" icon="o-archive-box" link="####" />
-                </x-menu-sub>
+                <x-menu-item title="Home" icon="o-sparkles" link="/" />
+                <x-menu-item title="Dashboard" icon="o-table-cells" link="/dashboard" />
+
+                @if($user && $user->hasRole('admin'))
+                    <x-menu-item title="Users" icon="o-users" link="/users" />
+                @endif
+                @if($user && $user->hasRole('writer'))
+                    <x-menu-item title="Posts" icon="o-adjustments-horizontal" link="/posts" />
+                @endif
+                @if($user && ($user->hasRole('admin') || $user->hasRole('writer')))
+                    <x-menu-sub title="Settings" icon="o-cog-6-tooth">
+                        <x-menu-item title="Wifi" icon="o-wifi" link="####" />
+                        <x-menu-item title="Archives" icon="o-archive-box" link="####" />
+                    </x-menu-sub>
+                @endif
             </x-menu>
         </x-slot:sidebar>
 
