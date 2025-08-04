@@ -37,6 +37,8 @@ jobs:
           php artisan migrate --force
           php artisan migrate:fresh
           php artisan db:seed
+          php artisan db:seed --class=PostSeeder
+          php artisan db:seed --class=RoleSeeder
           # 🧰 Build frontend
           npm install
           npm run build
