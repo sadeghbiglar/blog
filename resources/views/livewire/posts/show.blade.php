@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Post;
+use App\Models\Comment;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
@@ -13,10 +14,11 @@ class extends Component {
     use Toast;
 
     public Post $post;
+    public string $content = '';
 
     public function mount(Post $post): void
     {
-        $this->post = $post;
+        $this->post = $post->load('comments.user'); // Eager load comments with user
         $this->post->increment('views');
     }
 
@@ -24,6 +26,35 @@ class extends Component {
     {
         $this->post->increment('likes');
         $this->success('Post liked!', position: 'toast-bottom');
+    }
+
+    public function saveComment(): void
+    {
+        $this->validate([
+            'content' => 'required|string|min:3|max:500',
+        ]);
+
+        Comment::create([
+            'post_id' => $this->post->id,
+            'user_id' => auth()->id(),
+            'content' => $this->content,
+        ]);
+
+        $this->content = '';
+        $this->post->refresh();
+        $this->success('Comment added successfully.', position: 'toast-bottom');
+    }
+
+    public function deleteComment($commentId): void
+    {
+        $comment = Comment::findOrFail($commentId);
+        if (auth()->user()->hasRole('admin') || auth()->user()->hasRole('senior_writer') || auth()->user()->id === $comment->user_id) {
+            $comment->delete();
+            $this->post->refresh();
+            $this->success('Comment deleted successfully.', position: 'toast-bottom');
+        } else {
+            $this->error('Unauthorized action.', position: 'toast-bottom');
+        }
     }
 }; ?>
 
@@ -43,7 +74,34 @@ class extends Component {
 
         <div class="mt-4">
             <x-button label="Like" wire:click="like" icon="o-heart" class="btn-primary" spinner="like" />
+            @if (auth()->user()->hasRole('admin') || auth()->user()->hasRole('senior_writer') || auth()->user()->id === $post->user_id)
+                <x-button label="Edit Post" link="/posts/{{ $post->id }}/edit" icon="o-pencil" class="btn-primary" />
+            @endif
             <x-button label="Back to Home" link="/" icon="o-arrow-left" class="btn-ghost" />
         </div>
+
+        <h3 class="mt-8 text-lg font-bold">Comments</h3>
+        @if ($post->comments->isEmpty())
+            <p class="text-gray-500 mt-2">No comments yet.</p>
+        @else
+            @foreach ($post->comments as $comment)
+                <div class="mt-4 p-4 bg-gray-100 rounded">
+                    <p class="text-sm"><strong>{{ $comment->user->name }}</strong> on {{ $comment->created_at->format('M d, Y H:i') }}</p>
+                    <p>{{ $comment->content }}</p>
+                    @if (auth()->user()->hasRole('admin') || auth()->user()->hasRole('senior_writer') || auth()->user()->id === $comment->user_id)
+                        <x-button label="Delete" wire:click="deleteComment({{ $comment->id }})" icon="o-trash" class="btn-ghost btn-sm text-error" wire:confirm="Are you sure?" />
+                    @endif
+                </div>
+            @endforeach
+        @endif
+
+        @auth
+            <div class="mt-6">
+                <x-form>
+                    <x-textarea label="Add a Comment" wire:model="content" placeholder="Write your comment..." rows="4" />
+                    <x-button label="Submit Comment" wire:click="saveComment" icon="o-paper-airplane" class="btn-primary mt-2" spinner />
+                </x-form>
+            </div>
+        @endauth
     </x-card>
 </div>
