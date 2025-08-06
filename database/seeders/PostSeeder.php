@@ -27,7 +27,7 @@ class PostSeeder extends Seeder
             'image' => 'posts/laravel.jpg',
             'published_at' => now(),
             'views' => 150,
-            'likes' => 20,
+          
         ]);
 
         Post::create([
@@ -38,7 +38,7 @@ class PostSeeder extends Seeder
             'image' => 'posts/livewire.jpg',
             'published_at' => now()->subDay(),
             'views' => 80,
-            'likes' => 10,
+            
         ]);
 
         Post::create([
@@ -49,7 +49,7 @@ class PostSeeder extends Seeder
             'image' => 'posts/draft.jpg',
             'published_at' => null,
             'views' => 0,
-            'likes' => 0,
+           
         ]);
     }
 }

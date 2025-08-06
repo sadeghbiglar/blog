@@ -2,6 +2,7 @@
 
 use App\Models\Post;
 use App\Models\User;
+use App\Models\Like;
 use Livewire\Volt\Component;
 use Mary\Traits\Toast;
 use Illuminate\Database\Eloquent\Builder;
@@ -49,7 +50,7 @@ new class extends Component {
             ['key' => 'title', 'label' => 'Title', 'class' => 'w-64'],
             ['key' => 'published_at', 'label' => 'Published At', 'class' => 'hidden lg:table-cell'],
             ['key' => 'views', 'label' => 'Views', 'class' => 'w-20'],
-            ['key' => 'likes', 'label' => 'Likes', 'class' => 'w-20'],
+            ['key' => 'likes_count', 'label' => 'Likes', 'class' => 'w-20'],
         ];
     }
 
@@ -64,7 +65,7 @@ new class extends Component {
 
     public function posts(): LengthAwarePaginator
     {
-        $query = Post::query()->with('user');
+        $query = Post::query()->with('user')->withCount('likes');
 
         if (!auth()->user()->hasRole('senior_writer')) {
             $query->where('user_id', auth()->id());
@@ -86,10 +87,18 @@ new class extends Component {
 
     public function stats(): array
     {
+        $postIds = auth()->user()->hasRole('senior_writer')
+            ? Post::pluck('id')
+            : Post::where('user_id', auth()->id())->pluck('id');
+
         return [
-            'total_posts' => auth()->user()->hasRole('senior_writer') ? Post::count() : Post::where('user_id', auth()->id())->count(),
-            'total_views' => auth()->user()->hasRole('senior_writer') ? Post::sum('views') : Post::where('user_id', auth()->id())->sum('views'),
-            'total_likes' => auth()->user()->hasRole('senior_writer') ? Post::sum('likes') : Post::where('user_id', auth()->id())->sum('likes'),
+            'total_posts' => auth()->user()->hasRole('senior_writer')
+                ? Post::count()
+                : Post::where('user_id', auth()->id())->count(),
+            'total_views' => auth()->user()->hasRole('senior_writer')
+                ? Post::sum('views')
+                : Post::where('user_id', auth()->id())->sum('views'),
+            'total_likes' => Like::whereIn('post_id', $postIds)->count(),
             'total_users' => User::count(),
         ];
     }
@@ -97,8 +106,12 @@ new class extends Component {
     public function with(): array
     {
         return [
-            'posts' => (auth()->user()->hasRole('writer') || auth()->user()->hasRole('senior_writer')) ? $this->posts() : collect([]),
-            'users' => auth()->user()->hasRole('admin') ? $this->users() : collect([]),
+            'posts' => (auth()->user()->hasRole('writer') || auth()->user()->hasRole('senior_writer'))
+                ? $this->posts()
+                : collect([]),
+            'users' => auth()->user()->hasRole('admin')
+                ? $this->users()
+                : collect([]),
             'postHeaders' => $this->postHeaders(),
             'userHeaders' => $this->userHeaders(),
             'stats' => $this->stats(),
@@ -147,6 +160,9 @@ new class extends Component {
         <x-card shadow class="mb-6">
             <h2 class="text-lg font-bold mb-4">Your Posts</h2>
             <x-table :headers="$postHeaders" :rows="$posts" :sort-by="$sortBy" with-pagination link="/posts/{id}/edit?title={title}">
+                @scope('cell_likes_count', $post)
+                    {{ $post->likes_count }}
+                @endscope
                 @scope('actions', $post)
                     @if (auth()->user()->hasRole('senior_writer') || $post->user_id === auth()->id())
                         <x-button icon="o-pencil" link="/posts/{{ $post->id }}/edit?title={{ $post->title }}" class="btn-ghost btn-sm" />

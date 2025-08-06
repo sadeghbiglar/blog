@@ -21,6 +21,7 @@ class extends Component {
     {
         return Post::query()
             ->with('user')
+            ->withCount('likes') // Load likes count
             ->when($this->search, fn(Builder $q) => $q->where('title', 'like', "%$this->search%"))
             ->whereNotNull('published_at')
             ->orderBy(...array_values($this->sortBy))
@@ -57,7 +58,7 @@ class extends Component {
                         <h2 class="text-xl font-bold">{{ $post->title }}</h2>
                         <p class="text-sm text-gray-500">By {{ $post->user->name }} | {{ $post->published_at ? $post->published_at->format('M d, Y') : 'Not Published' }}</p>
                         <p class="text-gray-600">{{ \Illuminate\Support\Str::limit(strip_tags($post->content), 150) }}</p>
-                        <p class="text-sm text-gray-500">Views: {{ $post->views }} | Likes: {{ $post->likes }}</p>
+                        <p class="text-sm text-gray-500">Views: {{ $post->views }} | Likes: {{ $post->likes_count }}</p>
                         <x-button label="Read More" link="/posts/{{ $post->id }}" class="btn-primary mt-2" />
                     </div>
                 </div>

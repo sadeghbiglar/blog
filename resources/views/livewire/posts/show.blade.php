@@ -2,6 +2,7 @@
 
 use App\Models\Post;
 use App\Models\Comment;
+use App\Models\Like;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
@@ -18,14 +19,26 @@ class extends Component {
 
     public function mount(Post $post): void
     {
-        $this->post = $post->load('comments.user'); // Eager load comments with user
+        $this->post = $post->load('comments.user', 'likes');
         $this->post->increment('views');
     }
 
-    public function like(): void
+    public function toggleLike(): void
     {
-        $this->post->increment('likes');
-        $this->success('Post liked!', position: 'toast-bottom');
+        $userId = auth()->id();
+        if ($this->post->likedByUser($userId)) {
+            // Unlike
+            $this->post->likes()->where('user_id', $userId)->delete();
+            $this->success('Post unliked!', position: 'toast-bottom');
+        } else {
+            // Like
+            Like::create([
+                'user_id' => $userId,
+                'post_id' => $this->post->id,
+            ]);
+            $this->success('Post liked!', position: 'toast-bottom');
+        }
+        $this->post->refresh();
     }
 
     public function saveComment(): void
@@ -70,10 +83,10 @@ class extends Component {
             <img src="{{ \Illuminate\Support\Facades\Storage::url($post->image) }}" alt="{{ $post->title }}" class="w-full h-64 object-cover rounded mb-4" />
         @endif
         <div class="prose max-w-none">{!! $post->content !!}</div>
-        <p class="text-sm text-gray-500 mt-4">Views: {{ $post->views }} | Likes: {{ $post->likes }}</p>
+        <p class="text-sm text-gray-500 mt-4">Views: {{ $post->views }} | Likes: {{ $post->likes->count() }}</p>
 
         <div class="mt-4">
-            <x-button label="Like" wire:click="like" icon="o-heart" class="btn-primary" spinner="like" />
+            <x-button label="{{ $post->likedByUser(auth()->id()) ? 'Unlike' : 'Like' }}" wire:click="toggleLike" icon="o-heart" class="btn-primary" spinner="toggleLike" />
             @if (auth()->user()->hasRole('admin') || auth()->user()->hasRole('senior_writer') || auth()->user()->id === $post->user_id)
                 <x-button label="Edit Post" link="/posts/{{ $post->id }}/edit" icon="o-pencil" class="btn-primary" />
             @endif
