@@ -13,9 +13,9 @@ Route::get('/logout', function () {
     request()->session()->regenerateToken();
     return redirect('/');
 });
+    Volt::route('/', 'index')->name('home');
 
 Route::middleware('auth')->group(function () {
-    Volt::route('/', 'index')->name('home');
     Volt::route('/dashboard', 'dashboard')->name('dashboard');
     Volt::route('/users', 'users.index')->name('users.index');
     Volt::route('/users/create', 'users.create')->name('users.create');
