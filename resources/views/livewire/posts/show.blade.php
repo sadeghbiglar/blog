@@ -79,9 +79,9 @@ class extends Component {
     <x-card shadow>
         <h1 class="text-2xl font-bold mb-4">{{ $post->title }}</h1>
         <p class="text-sm text-gray-500 mb-4">By {{ $post->user->name }} | {{ $post->published_at ? $post->published_at->format('M d, Y') : 'Not Published' }}</p>
-        @if ($post->image)
-            <img src="{{ \Illuminate\Support\Facades\Storage::url($post->image) }}" alt="{{ $post->title }}" class="w-full h-64 object-cover rounded mb-4" />
-        @endif
+       
+           <img src="{{ $post->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($post->image) ? \Illuminate\Support\Facades\Storage::url($post->image) : '/default-image.png' }}" alt="{{ $post->title }}" class="w-full h-64 object-cover rounded mb-4" />
+      
         <div class="prose max-w-none">{!! $post->content !!}</div>
         <p class="text-sm text-gray-500 mt-4">Views: {{ $post->views }} | Likes: {{ $post->likes->count() }}</p>
 

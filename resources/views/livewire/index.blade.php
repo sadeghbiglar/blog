@@ -83,7 +83,7 @@ class extends Component {
                 @auth
                     <div class="relative">
                         <button onclick="toggleMenu('user-menu')" class="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
-                           <img src="{{ auth()->user()->avatar }}" alt="Avatar" class="w-8 h-8 rounded-full">
+                           <img src="{{ auth()->user()->avatar ?? '/empty-user.jpg'}}" alt="Avatar" class="w-8 h-8 rounded-full">
                         <span>{{ auth()->user()->name }}</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
@@ -182,10 +182,7 @@ class extends Component {
                     @foreach ($posts as $post)
                         <div class="bg-white shadow rounded-md p-4">
                             <div class="flex flex-col md:flex-row gap-4">
-                                @if ($post->image)
-                                    <img src="{{ \Illuminate\Support\Facades\Storage::url($post->image) }}" alt="{{ $post->title }}" class="w-full md:w-1/4 h-48 object-cover rounded" />
-                                @endif
-                                <div class="flex-1">
+<img src="{{ $post->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($post->image) ? \Illuminate\Support\Facades\Storage::url($post->image) : '/default-image.png' }}" alt="{{ $post->title }}" class="w-full md:w-1/4 h-48 object-cover rounded" />                                <div class="flex-1">
                                     <h2 class="text-xl font-bold">{{ $post->title }}</h2>
                                     <p class="text-sm text-gray-500">By {{ $post->user->name }} | {{ $post->published_at ? $post->published_at->format('M d, Y') : 'Not Published' }}</p>
                                     <p class="text-gray-600">{{ \Illuminate\Support\Str::limit(strip_tags($post->content), 150) }}</p>

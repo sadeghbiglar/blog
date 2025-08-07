@@ -51,7 +51,7 @@ new class extends Component
     public function headers(): array
     {
         return [
-            ['key' => 'image', 'label' => '', 'class' => 'w-1'],
+            // ['key' => 'image', 'label' => '', 'class' => 'w-1'],
             ['key' => 'id', 'label' => '#', 'class' => 'w-1'],
             ['key' => 'title', 'label' => 'Title'],
             ['key' => 'user_name', 'label' => 'Author', 'class' => 'hidden lg:table-cell'],
@@ -98,9 +98,9 @@ new class extends Component
 
     <x-card shadow>
         <x-table :headers="$headers" :rows="$posts" :sort-by="$sortBy" with-pagination>
-            @scope('cell_image', $post)
+            <!-- @scope('cell_image', $post)
                 <x-avatar image="{{ $post->image ? Storage::url($post->image) : '/empty-post.jpg' }}" class="!w-10" />
-            @endscope
+            @endscope -->
             @scope('cell_title', $post)
                 <a href="{{ route('posts.show', $post->id) }}" class="text-blue-600 hover:underline">{{ $post->title }}</a>
             @endscope
