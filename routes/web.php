@@ -26,3 +26,4 @@ Route::middleware('auth')->group(function () {
 });
 Volt::route('/posts/{post}', 'posts.show')->name('posts.show');
 Volt::route('/archive/{year}', 'pages.archive-posts')->name('posts.archive');
+Volt::route('/contact', 'pages.contact')->name('contact');
