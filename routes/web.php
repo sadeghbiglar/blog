@@ -23,6 +23,8 @@ Route::middleware('auth')->group(function () {
     Volt::route('/posts', 'posts.index')->name('posts.index');
     Volt::route('/posts/create', 'posts.create')->name('posts.create');
     Volt::route('/posts/{post}/edit', 'posts.edit')->name('posts.edit');
+    Volt::route('/profile', 'pages.profile')->name('profile.show');
+
 });
 Volt::route('/posts/{post}', 'posts.show')->name('posts.show');
 Volt::route('/archive/{year}', 'pages.archive-posts')->name('posts.archive');
