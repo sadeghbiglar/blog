@@ -15,7 +15,8 @@
             <div class="px-4 py-2 text-sm text-gray-700 opacity-50 cursor-not-allowed">{{ auth()->user()->email }}</div>
             <a href="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
             <a href="/dashboard" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Dashboard</a>
-            <a href="/logout" wire:click.prevent="logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+            <a href="/logout"  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+      
         </div>
     @else
         <!-- دکمه منوی کاربر مهمان -->

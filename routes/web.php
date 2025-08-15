@@ -11,7 +11,7 @@ Route::get('/logout', function () {
     auth()->logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
-    return redirect('/');
+    return redirect('/login');
 });
     Volt::route('/', 'index')->name('home');
     Volt::route('/categories/{category}', 'category-show')->name('categories.show');

@@ -1,7 +1,7 @@
 {{-- resources/views/components/site-header.blade.php --}}
 <div class="relative overflow-hidden bg-gradient-to-r from-purple-600 via-pink-500 to-red-500 text-white h-52 sm:h-60 lg:h-64">
     {{-- متن هدر --}}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-center relative z-10 text-center lg:text-left">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-center relative z-10 text-center lg:text-right">
         <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight drop-shadow-lg animate-fade-in">
             {{ $title ?? 'Welcome to Our Blog' }}
         </h1>
