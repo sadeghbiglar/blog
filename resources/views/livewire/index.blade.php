@@ -216,7 +216,7 @@ class extends Component {
                     <h3 class="text-lg font-bold mb-4">Archive</h3>
                     @foreach ($archive as $year)
                         <div class="mb-2">
-                            <a href="{{ route('posts.index', ['year' => $year->year]) }}" class="text-blue-600 hover:underline">{{ $year->year }}</a>
+<a href="{{ route('posts.archive', $year->year) }}" class="text-blue-600 hover:underline">{{ $year->year }}</a>
                         </div>
                     @endforeach
                 </div>
