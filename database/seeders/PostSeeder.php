@@ -29,7 +29,106 @@ class PostSeeder extends Seeder
             'views' => 150,
           
         ]);
-
+ Post::create([
+            'title' => 'Introduction to Laravel-1',
+            'slug' => Str::slug('Introduction to Laravel-1'),
+            'content' => 'This post introduces the Laravel framework and its features.',
+            'user_id' => $writer->id,
+            'image' => 'posts/laravel.jpg',
+            'published_at' => now(),
+            'views' => 150,
+          
+        ]);
+         Post::create([
+            'title' => 'Introduction to Laravel-2',
+            'slug' => Str::slug('Introduction to Laravel-2'),
+            'content' => 'This post introduces the Laravel framework and its features.',
+            'user_id' => $writer->id,
+            'image' => 'posts/laravel.jpg',
+            'published_at' => now(),
+            'views' => 150,
+          
+        ]);
+         Post::create([
+            'title' => 'Introduction to Laravel-3',
+            'slug' => Str::slug('Introduction to Laravel-3'),
+            'content' => 'This post introduces the Laravel framework and its features.',
+            'user_id' => $writer->id,
+            'image' => 'posts/laravel.jpg',
+            'published_at' => now(),
+            'views' => 150,
+          
+        ]);
+         Post::create([
+            'title' => 'Introduction to Laravel-4',
+            'slug' => Str::slug('Introduction to Laravel-4'),
+            'content' => 'This post introduces the Laravel framework and its features.',
+            'user_id' => $writer->id,
+            'image' => 'posts/laravel.jpg',
+            'published_at' => now(),
+            'views' => 150,
+          
+        ]);
+         Post::create([
+            'title' => 'Introduction to Laravel-5',
+            'slug' => Str::slug('Introduction to Laravel-5'),
+            'content' => 'This post introduces the Laravel framework and its features.',
+            'user_id' => $writer->id,
+            'image' => 'posts/laravel.jpg',
+            'published_at' => now(),
+            'views' => 150,
+          
+        ]);
+         Post::create([
+            'title' => 'Introduction to Laravel-6',
+            'slug' => Str::slug('Introduction to Laravel-6'),
+            'content' => 'This post introduces the Laravel framework and its features.',
+            'user_id' => $writer->id,
+            'image' => 'posts/laravel.jpg',
+            'published_at' => now(),
+            'views' => 150,
+          
+        ]);
+         Post::create([
+            'title' => 'Introduction to Laravel-7',
+            'slug' => Str::slug('Introduction to Laravel-7'),
+            'content' => 'This post introduces the Laravel framework and its features.',
+            'user_id' => $writer->id,
+            'image' => 'posts/laravel.jpg',
+            'published_at' => now(),
+            'views' => 150,
+          
+        ]);
+         Post::create([
+            'title' => 'Introduction to Laravel-8',
+            'slug' => Str::slug('Introduction to Laravel-8'),
+            'content' => 'This post introduces the Laravel framework and its features.',
+            'user_id' => $writer->id,
+            'image' => 'posts/laravel.jpg',
+            'published_at' => now(),
+            'views' => 150,
+          
+        ]);
+         Post::create([
+            'title' => 'Introduction to Laravel-9',
+            'slug' => Str::slug('Introduction to Laravel-9'),
+            'content' => 'This post introduces the Laravel framework and its features.',
+            'user_id' => $writer->id,
+            'image' => 'posts/laravel.jpg',
+            'published_at' => now(),
+            'views' => 150,
+          
+        ]);
+         Post::create([
+            'title' => 'Introduction to Laravel-10',
+            'slug' => Str::slug('Introduction to Laravel-10'),
+            'content' => 'This post introduces the Laravel framework and its features.',
+            'user_id' => $writer->id,
+            'image' => 'posts/laravel.jpg',
+            'published_at' => now(),
+            'views' => 150,
+          
+        ]);
         Post::create([
             'title' => 'Getting Started with Livewire',
             'slug' => Str::slug('Getting Started with Livewire'),
