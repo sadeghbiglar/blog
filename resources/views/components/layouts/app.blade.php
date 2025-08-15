@@ -41,7 +41,7 @@
                 @if($user && $user->hasRole('admin'))
                     <x-menu-item title="Users" icon="o-users" link="/users" />
                 @endif
-                @if($user &&  $user->hasRole('senior_writer'))
+                @if($user && $user->hasRole('writer') || $user->hasRole('senior_writer'))
                     <x-menu-item title="Posts" icon="o-adjustments-horizontal" link="/posts" />
                 @endif
                 @if($user && ($user->hasRole('admin') || $user->hasRole('writer') || $user->hasRole('senior_writer')))

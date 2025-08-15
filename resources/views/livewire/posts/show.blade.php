@@ -19,7 +19,7 @@ class extends Component {
 
     public function mount(Post $post): void
     {
-        $this->post = $post->load('comments.user', 'likes');
+        $this->post = $post->load('comments.user', 'likes', 'categories');
         $this->post->increment('views');
     }
 
@@ -79,9 +79,16 @@ class extends Component {
     <x-card shadow>
         <h1 class="text-2xl font-bold mb-4">{{ $post->title }}</h1>
         <p class="text-sm text-gray-500 mb-4">By {{ $post->user->name }} | {{ $post->published_at ? $post->published_at->format('M d, Y') : 'Not Published' }}</p>
-       
-           <img src="{{ $post->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($post->image) ? \Illuminate\Support\Facades\Storage::url($post->image) : '/default-image.png' }}" alt="{{ $post->title }}" class="w-full h-64 object-cover rounded mb-4" />
-      
+        @if ($post->categories->isNotEmpty())
+            <div class="mb-4">
+                @foreach ($post->categories as $category)
+                    <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-2">
+                        <a href="{{ route('categories.show', $category->slug) }}">{{ $category->name }}</a>
+                    </span>
+                @endforeach
+            </div>
+        @endif
+        <img src="{{ $post->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($post->image) ? \Illuminate\Support\Facades\Storage::url($post->image) : '/default-image.png' }}" alt="{{ $post->title }}" class="w-full h-64 object-cover rounded mb-4" />
         <div class="prose max-w-none">{!! $post->content !!}</div>
         <p class="text-sm text-gray-500 mt-4">Views: {{ $post->views }} | Likes: {{ $post->likes->count() }}</p>
 

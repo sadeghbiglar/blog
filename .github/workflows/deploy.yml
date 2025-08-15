@@ -35,7 +35,6 @@ jobs:
 
           # 🛠️ Run migrations
           php artisan migrate:fresh --seed 
-          
           # 🧰 Build frontend
           npm install
           npm run build
@@ -44,5 +43,9 @@ jobs:
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
+          php artisan cache:clear
+          php artisan view:clear
+          php artisan route:clear
           php artisan optimize
+          
         EOF

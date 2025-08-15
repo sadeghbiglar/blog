@@ -14,7 +14,7 @@ Route::get('/logout', function () {
     return redirect('/');
 });
     Volt::route('/', 'index')->name('home');
-
+    Volt::route('/categories/{category}', 'category-show')->name('categories.show');
 Route::middleware('auth')->group(function () {
     Volt::route('/dashboard', 'dashboard')->name('dashboard');
     Volt::route('/users', 'users.index')->name('users.index');
