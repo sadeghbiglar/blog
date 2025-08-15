@@ -33,15 +33,35 @@ new class extends Component {
         }
     }
 
+    // public function deleteUser(User $user): void
+    // {
+    //     if (auth()->user()->hasRole('admin')) {
+    //         $user->delete();
+    //         $this->success("$user->name deleted.", position: 'toast-bottom');
+    //     } 
+        
+    //     else {
+    //         $this->error('You are not authorized to delete users.', position: 'toast-bottom');
+    //     }
+    // }
+
     public function deleteUser(User $user): void
-    {
-        if (auth()->user()->hasRole('admin')) {
-            $user->delete();
-            $this->success("$user->name deleted.", position: 'toast-bottom');
-        } else {
-            $this->error('You are not authorized to delete users.', position: 'toast-bottom');
-        }
+{
+    // جلوگیری از حذف خودش
+    if ($user->id === auth()->id()) {
+        $this->error('You cannot delete your own account.', position: 'toast-bottom');
+        return;
     }
+
+    // جلوگیری از حذف ادمین دیگر
+    if ($user->hasRole('admin')) {
+        $this->error('You cannot delete another admin.', position: 'toast-bottom');
+        return;
+    }
+
+    $user->delete();
+    $this->warning("$user->name deleted", 'Good bye!', position: 'toast-bottom');
+}
 
     public function postHeaders(): array
     {

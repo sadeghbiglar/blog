@@ -61,11 +61,24 @@ new class extends Component {
     // {
     //     $this->warning("Will delete #$id", 'It is fake.', position: 'toast-bottom');
     // }
-    public function delete(User $user): void
-    {
+   public function delete(User $user): void
+{
+    // جلوگیری از حذف خودش
+    if ($user->id === auth()->id()) {
+        $this->error('You cannot delete your own account.', position: 'toast-bottom');
+        return;
+    }
+
+    // جلوگیری از حذف ادمین دیگر
+    if ($user->hasRole('admin')) {
+        $this->error('You cannot delete another admin.', position: 'toast-bottom');
+        return;
+    }
+
     $user->delete();
     $this->warning("$user->name deleted", 'Good bye!', position: 'toast-bottom');
-    }
+}
+
     // Table headers
     public function headers(): array
     {
