@@ -9,9 +9,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator; 
 use Livewire\WithPagination; 
 use App\Models\Country;  
+
 new class extends Component {
-    use Toast;
-    use WithPagination; 
+    use Toast, WithPagination; 
+
     public string $search = '';
     public bool $roleDrawer = false;
     public bool $drawer = false;
@@ -19,28 +20,32 @@ new class extends Component {
     public array $selected_roles = [];
     public int $user_id = 0;
     public array $sortBy = ['column' => 'name', 'direction' => 'asc'];
+
     public function mount(): void
     {
-        if (!auth()->user()->hasRole('admin')) {
+        if (!auth()->user()->hasRole('super_admin') ) {
             $this->error('You are not authorized to access this page.', position: 'toast-bottom');
             redirect()->route('dashboard');
         }
     }
+
     // Reset pagination when any component property changes
     public function updated($property): void
     {
-    if (! is_array($property) && $property != "") {
-        $this->resetPage();
+        if (! is_array($property) && $property != "") {
+            $this->resetPage();
+        }
     }
-    }
+
     // Clear filters
     public function clear(): void
     {
-    $this->reset();
-    $this->resetPage(); 
-    $this->success('Filters cleared.', position: 'toast-bottom');
+        $this->reset();
+        $this->resetPage(); 
+        $this->success('Filters cleared.', position: 'toast-bottom');
     }
-// Show role assignment form
+
+    // Show role assignment form
     public function showRoleForm($user_id): void
     {
         $this->user_id = $user_id;
@@ -48,6 +53,7 @@ new class extends Component {
         $this->selected_roles = $user->roles->pluck('id')->toArray();
         $this->roleDrawer = true;
     }
+
     // Save roles for user
     public function saveRoles(): void
     {
@@ -56,28 +62,31 @@ new class extends Component {
         $this->success('Roles updated.', position: 'toast-bottom');
         $this->roleDrawer = false;
     }
-    // Delete action
-    // public function delete($id): void
-    // {
-    //     $this->warning("Will delete #$id", 'It is fake.', position: 'toast-bottom');
-    // }
-   public function delete(User $user): void
-{
-    // جلوگیری از حذف خودش
-    if ($user->id === auth()->id()) {
-        $this->error('You cannot delete your own account.', position: 'toast-bottom');
-        return;
-    }
 
-    // جلوگیری از حذف ادمین دیگر
-    if ($user->hasRole('admin')) {
-        $this->error('You cannot delete another admin.', position: 'toast-bottom');
-        return;
-    }
+    // Delete user
+    public function delete(User $user): void
+    {
+        // جلوگیری از حذف خودش
+        if ($user->id === auth()->id()) {
+            $this->error('You cannot delete your own account.', position: 'toast-bottom');
+            return;
+        }
 
-    $user->delete();
-    $this->warning("$user->name deleted", 'Good bye!', position: 'toast-bottom');
-}
+        // اگر کاربر سوپر ادمین نبود، اجازه حذف ادمین‌ها رو نداره
+        if ($user->hasRole('admin') && !auth()->user()->hasRole('super_admin')) {
+            $this->error('Only Super Admin can delete an Admin.', position: 'toast-bottom');
+            return;
+        }
+
+        // هیچکس حق حذف سوپر ادمین رو نداره
+        if ($user->hasRole('super_admin')) {
+            $this->error('Super Admin cannot be deleted.', position: 'toast-bottom');
+            return;
+        }
+
+        $user->delete();
+        $this->warning("$user->name deleted", 'Good bye!', position: 'toast-bottom');
+    }
 
     // Table headers
     public function headers(): array
@@ -86,33 +95,22 @@ new class extends Component {
             ['key' => 'avatar', 'label' => '', 'class' => 'w-1'], 
             ['key' => 'id', 'label' => '#', 'class' => 'w-1'],
             ['key' => 'name', 'label' => 'Name', 'class' => 'w-64'],
-            // ['key' => 'age', 'label' => 'Age', 'class' => 'w-20'],
-            // ['key' => 'country.name', 'label' => 'Country'],
-            // ['key' => 'country_name', 'label' => 'Country'],
             ['key' => 'country_name', 'label' => 'Country', 'class' => 'hidden lg:table-cell'], 
             ['key' => 'email', 'label' => 'E-mail', 'sortable' => false],
             ['key' => 'roles', 'label' => 'Roles', 'class' => 'hidden lg:table-cell'],
         ];
     }
 
-    /**
-     * For demo purpose, this is a static collection.
-     *
-     * On real projects you do it with Eloquent collections.
-     * Please, refer to maryUI docs to see the eloquent examples.
-     */
-//   public function users(): Collection
-public function users(): LengthAwarePaginator 
-{
-    return User::query()
-        ->withAggregate('country', 'name') 
-        ->with('roles')
-        ->when($this->search, fn(Builder $q) => $q->where('name', 'like', "%$this->search%"))
-        ->when($this->country_id, fn(Builder $q) => $q->where('country_id', $this->country_id)) 
-        ->orderBy(...array_values($this->sortBy))
-        // ->get();
-        ->paginate(5); // No more `->get()` 
-}
+    public function users(): LengthAwarePaginator 
+    {
+        return User::query()
+            ->withAggregate('country', 'name') 
+            ->with('roles')
+            ->when($this->search, fn(Builder $q) => $q->where('name', 'like', "%$this->search%"))
+            ->when($this->country_id, fn(Builder $q) => $q->where('country_id', $this->country_id)) 
+            ->orderBy(...array_values($this->sortBy))
+            ->paginate(5);
+    }
 
     public function with(): array
     {
@@ -120,10 +118,12 @@ public function users(): LengthAwarePaginator
             'users' => $this->users(),
             'headers' => $this->headers(),
             'countries' => Country::all(), 
-            'roles' => Role::all(),
+            // فقط نقش‌های غیر از سوپر ادمین
+            'roles' => Role::where('name', '!=', 'super_admin')->get(),
         ];
     }
-}; ?>
+};
+?>
 
 <div>
     <!-- HEADER -->
@@ -133,16 +133,15 @@ public function users(): LengthAwarePaginator
         </x-slot:middle>
         <x-slot:actions>
             <x-button label="Filters" @click="$wire.drawer = true" responsive icon="o-funnel" />
-             <x-button label="Create" link="/users/create" responsive icon="o-plus" class="btn-primary" />   
+            <x-button label="Create" link="/users/create" responsive icon="o-plus" class="btn-primary" />   
         </x-slot:actions>
     </x-header>
 
     <!-- TABLE  -->
     <x-card shadow>
-       <x-table :headers="$headers" :rows="$users" :sort-by="$sortBy" with-pagination  >
-
-        @scope('cell_avatar', $user)                                                    
-           <x-avatar image="{{ $user->avatar ?? '/empty-user.jpg' }}" class="!w-10" />
+       <x-table :headers="$headers" :rows="$users" :sort-by="$sortBy" with-pagination>
+            @scope('cell_avatar', $user)                                                    
+                <x-avatar image="{{ $user->avatar ?? '/empty-user.jpg' }}" class="!w-10" />
             @endscope
             @scope('cell_roles', $user)
                 <div class="flex gap-2">
@@ -151,11 +150,10 @@ public function users(): LengthAwarePaginator
                     @endforeach
                 </div>
             @endscope
-
             @scope('actions', $user)
-            <x-button icon="o-pencil" link="users/{{ $user->id }}/edit?name={{ $user->name }}" class="btn-ghost btn-sm" />
-            <x-button icon="o-user" wire:click="showRoleForm({{ $user->id }})" class="btn-ghost btn-sm" />
-            <x-button icon="o-trash" wire:click="delete({{ $user['id'] }})" wire:confirm="Are you sure?" spinner class="btn-ghost btn-sm text-error" />
+                <x-button icon="o-pencil" link="users/{{ $user->id }}/edit?name={{ $user->name }}" class="btn-ghost btn-sm" />
+                <x-button icon="o-user" wire:click="showRoleForm({{ $user->id }})" class="btn-ghost btn-sm" />
+                <x-button icon="o-trash" wire:click="delete({{ $user['id'] }})" wire:confirm="Are you sure?" spinner class="btn-ghost btn-sm text-error" />
             @endscope
         </x-table>
     </x-card>
@@ -170,6 +168,7 @@ public function users(): LengthAwarePaginator
             <x-button label="Done" icon="o-check" class="btn-primary" @click="$wire.drawer = false" />
         </x-slot:actions>
     </x-drawer>
+
     <!-- ROLE ASSIGNMENT DRAWER -->
     <x-drawer wire:model="roleDrawer" title="Assign Roles" right separator with-close-button class="lg:w-1/3">
         <x-choices
