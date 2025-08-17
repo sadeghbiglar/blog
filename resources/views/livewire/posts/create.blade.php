@@ -36,10 +36,10 @@ class extends Component {
 
     public function mount(): void
     {
-        if (!auth()->user()->hasRole('writer')) {
-            $this->error('You are not authorized to access this page.', position: 'toast-bottom');
-            redirect()->route('dashboard');
-        }
+       if (!Gate::allows('writers')) {
+        $this->error('You are not authorized to access this page.', position: 'toast-bottom');
+        redirect()->route('dashboard');
+    }
 
         $this->categoryOptions = Category::all()->map(function ($category) {
             return ['id' => (string) $category->id, 'name' => $category->name];

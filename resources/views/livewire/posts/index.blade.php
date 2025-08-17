@@ -18,10 +18,10 @@ new class extends Component
 
     public function mount(): void
     {
-        if (!auth()->user()->hasRole('admin') && !auth()->user()->hasRole('writer') && !auth()->user()->hasRole('senior_writer')) {
-            $this->error('You are not authorized to access this page.', position: 'toast-bottom');
-            redirect()->route('dashboard');
-        }
+       if (!Gate::allows('writers')) {
+        $this->error('You are not authorized to access this page.', position: 'toast-bottom');
+        redirect()->route('dashboard');
+    }
     }
 
     public function updated($property): void

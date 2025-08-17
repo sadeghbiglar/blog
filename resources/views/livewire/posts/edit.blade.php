@@ -36,10 +36,10 @@ class extends Component {
 
     public function mount(Post $post): void
     {
-        if (!auth()->user()->hasRole('writer')) {
-            $this->error('You are not authorized to access this page.', position: 'toast-bottom');
-            redirect()->route('dashboard');
-        }
+        if (!Gate::allows('writers')) {
+        $this->error('You are not authorized to access this page.', position: 'toast-bottom');
+        redirect()->route('dashboard');
+    }
 
         $this->post = $post;
 

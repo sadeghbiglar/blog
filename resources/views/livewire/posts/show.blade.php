@@ -115,7 +115,7 @@ class extends Component {
             <x-button label="{{ auth()->check() && $post->likedByUser(auth()->id()) ? 'Unlike' : 'Like' }}" wire:click="toggleLike" icon="o-heart" class="btn-primary" spinner="toggleLike" />
             
             @auth
-                @if (auth()->user()->hasRole('admin') || auth()->user()->hasRole('senior_writer') || auth()->user()->id === $post->user_id)
+                @if ( auth()->user()->hasRole('senior_writer') || auth()->user()->id === $post->user_id)
                     <x-button label="Edit Post" link="/posts/{{ $post->id }}/edit" icon="o-pencil" class="btn-primary" />
                 @endif
             @endauth
@@ -134,7 +134,7 @@ class extends Component {
                     <p>{{ $comment->content }}</p>
 
                     @auth
-                        @if (auth()->user()->hasRole('admin') || auth()->user()->hasRole('senior_writer') || auth()->user()->id === $comment->user_id)
+                        @if ( auth()->user()->hasRole('senior_writer') || auth()->user()->id === $comment->user_id)
                             <x-button label="Delete" wire:click="deleteComment({{ $comment->id }})" icon="o-trash" class="btn-ghost btn-sm text-error" wire:confirm="Are you sure?" />
                         @endif
                     @endauth
