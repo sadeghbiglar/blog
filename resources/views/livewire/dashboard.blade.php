@@ -39,28 +39,18 @@ new class extends Component {
         }
     }
 
-    public function deleteUser(User $user): void
-    {
-        $auth = auth()->user();
-
-        if ($user->id === $auth->id) {
-            $this->error('You cannot delete your own account.', position: 'toast-bottom');
-            return;
-        }
-
-        if ($user->hasRole('super_admin') && !$auth->hasRole('super_admin')) {
-            $this->error('You cannot delete the super admin.', position: 'toast-bottom');
-            return;
-        }
-
-        if ($user->hasRole('admin') && $auth->hasRole('admin')) {
-            $this->error('Admins cannot delete other admins.', position: 'toast-bottom');
-            return;
-        }
+   // Delete user
+public function delete(User $user): void
+{
+    try {
+        $this->authorize('delete', $user);
 
         $user->delete();
         $this->warning("$user->name deleted", 'Good bye!', position: 'toast-bottom');
+    } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        $this->error('You are not authorized to delete this user.', position: 'toast-bottom');
     }
+}
 
     // نمایش فرم دراور نقش‌ها
     public function showRoleForm($user_id): void
@@ -168,17 +158,16 @@ new class extends Component {
         </x-slot:middle>
     </x-header>
 
-    @if (auth()->user()->hasRole('user') && !auth()->user()->hasRole('writer') && !auth()->user()->hasRole('senior_writer') && !auth()->user()->hasRole('admin'))
+@can('regular-user')
         <x-card shadow class="mb-6">
             <h2 class="text-xl font-bold">Welcome, {{ auth()->user()->name }}!</h2>
             <p>You are a regular user. Contact an admin to get more permissions.</p>
         </x-card>
-    @endif
+    @endcan
 
-    @if (auth()->user()->hasRole('writer') || auth()->user()->hasRole('senior_writer') || auth()->user()->hasRole('admin')|| auth()->user()->hasRole('super_admin'))
         <x-card shadow class="mb-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                @if (auth()->user()->hasRole('writer') || auth()->user()->hasRole('senior_writer'))
+                @can('writers')
                     <x-card title="Total Posts" class="text-center">
                         <span class="text-2xl font-bold">{{ $stats['total_posts'] }}</span>
                     </x-card>
@@ -188,17 +177,16 @@ new class extends Component {
                     <x-card title="Total Likes" class="text-center">
                         <span class="text-2xl font-bold">{{ $stats['total_likes'] }}</span>
                     </x-card>
-                @endif
-                @if (auth()->user()->hasRole('admin')|| auth()->user()->hasRole('super_admin'))
+                @endcan
+                  @can('admins')
                     <x-card title="Total Users" class="text-center">
                         <span class="text-2xl font-bold">{{ $stats['total_users'] }}</span>
                     </x-card>
-                @endif
+                @endcan
             </div>
         </x-card>
-    @endif
 
-    @if (auth()->user()->hasRole('writer') || auth()->user()->hasRole('senior_writer'))
+      @can('writers')
         <x-card shadow class="mb-6">
             <h2 class="text-lg font-bold mb-4">Your Posts</h2>
             <x-table :headers="$postHeaders" :rows="$posts" :sort-by="$sortBy" with-pagination link="/posts/{id}/edit?title={title}">
@@ -213,9 +201,9 @@ new class extends Component {
                 @endscope
             </x-table>
         </x-card>
-    @endif
+    @endcan
 
-    @if (auth()->user()->hasRole('admin')|| auth()->user()->hasRole('super_admin'))
+     @can('admins')
         <x-card shadow>
             <h2 class="text-lg font-bold mb-4">Users</h2>
             <x-table :headers="$userHeaders" :rows="$users" :sort-by="$sortBy" with-pagination>
@@ -226,14 +214,24 @@ new class extends Component {
                         @endforeach
                     </div>
                 @endscope
-                @scope('actions', $user)
-                    <x-button icon="o-pencil" link="/users/{{ $user->id }}/edit?name={{ $user->name }}" class="btn-ghost btn-sm" />
-                    <x-button icon="o-user" wire:click="showRoleForm({{ $user->id }})" class="btn-ghost btn-sm" />
-                    <x-button icon="o-trash" wire:click="deleteUser({{ $user->id }})" wire:confirm="Are you sure?" spinner class="btn-ghost btn-sm text-error" />
-                @endscope
+               @scope('actions', $user)
+    <x-button icon="o-pencil" link="users/{{ $user->id }}/edit?name={{ $user->name }}" class="btn-ghost btn-sm" />
+    <x-button icon="o-user" wire:click="showRoleForm({{ $user->id }})" class="btn-ghost btn-sm" />
+    
+    @can('delete', $user)
+        <x-button 
+            icon="o-trash" 
+            wire:click="delete({{ $user['id'] }})" 
+            wire:confirm="Are you sure?" 
+            spinner 
+            class="btn-ghost btn-sm text-error" 
+        />
+    @endcan
+@endscope
+
             </x-table>
         </x-card>
-    @endif
+    @endcan
 
     <!-- ROLE ASSIGNMENT DRAWER -->
     <x-drawer wire:model="roleDrawer" title="Assign Roles" right separator with-close-button class="lg:w-1/3">

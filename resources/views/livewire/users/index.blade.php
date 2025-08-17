@@ -23,10 +23,10 @@ new class extends Component {
 
     public function mount(): void
     {
-        if (!auth()->user()->hasRole('super_admin') ) {
-            $this->error('You are not authorized to access this page.', position: 'toast-bottom');
-            redirect()->route('dashboard');
-        }
+        if (!Gate::allows('admins')) {
+        $this->error('You are not authorized to access this page.', position: 'toast-bottom');
+        redirect()->route('dashboard');
+    }
     }
 
     // Reset pagination when any component property changes
@@ -64,29 +64,18 @@ new class extends Component {
     }
 
     // Delete user
-    public function delete(User $user): void
-    {
-        // جلوگیری از حذف خودش
-        if ($user->id === auth()->id()) {
-            $this->error('You cannot delete your own account.', position: 'toast-bottom');
-            return;
-        }
-
-        // اگر کاربر سوپر ادمین نبود، اجازه حذف ادمین‌ها رو نداره
-        if ($user->hasRole('admin') && !auth()->user()->hasRole('super_admin')) {
-            $this->error('Only Super Admin can delete an Admin.', position: 'toast-bottom');
-            return;
-        }
-
-        // هیچکس حق حذف سوپر ادمین رو نداره
-        if ($user->hasRole('super_admin')) {
-            $this->error('Super Admin cannot be deleted.', position: 'toast-bottom');
-            return;
-        }
+   // Delete user
+public function delete(User $user): void
+{
+    try {
+        $this->authorize('delete', $user);
 
         $user->delete();
         $this->warning("$user->name deleted", 'Good bye!', position: 'toast-bottom');
+    } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        $this->error('You are not authorized to delete this user.', position: 'toast-bottom');
     }
+}
 
     // Table headers
     public function headers(): array
@@ -150,11 +139,21 @@ new class extends Component {
                     @endforeach
                 </div>
             @endscope
-            @scope('actions', $user)
-                <x-button icon="o-pencil" link="users/{{ $user->id }}/edit?name={{ $user->name }}" class="btn-ghost btn-sm" />
-                <x-button icon="o-user" wire:click="showRoleForm({{ $user->id }})" class="btn-ghost btn-sm" />
-                <x-button icon="o-trash" wire:click="delete({{ $user['id'] }})" wire:confirm="Are you sure?" spinner class="btn-ghost btn-sm text-error" />
-            @endscope
+           @scope('actions', $user)
+    <x-button icon="o-pencil" link="users/{{ $user->id }}/edit?name={{ $user->name }}" class="btn-ghost btn-sm" />
+    <x-button icon="o-user" wire:click="showRoleForm({{ $user->id }})" class="btn-ghost btn-sm" />
+    
+    @can('delete', $user)
+        <x-button 
+            icon="o-trash" 
+            wire:click="delete({{ $user['id'] }})" 
+            wire:confirm="Are you sure?" 
+            spinner 
+            class="btn-ghost btn-sm text-error" 
+        />
+    @endcan
+@endscope
+
         </x-table>
     </x-card>
 

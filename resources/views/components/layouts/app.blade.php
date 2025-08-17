@@ -38,18 +38,18 @@
                 @endif
 
                 <x-menu-item title="Home" icon="o-sparkles" link="/" />
-                @if($user && ($user->hasRole('admin') || $user->hasRole('super_admin')))
+                  @can('admins')
                     <x-menu-item title="Users" icon="o-users" link="/users" />
-                @endif
-                @if($user && $user->hasRole('writer') || $user->hasRole('senior_writer'))
+                @endcan
+                @can('writers')
                     <x-menu-item title="Posts" icon="o-adjustments-horizontal" link="/posts" />
-                @endif
-                @if($user && ($user->hasRole('admin') || $user->hasRole('writer') || $user->hasRole('senior_writer')|| $user->hasRole('super_admin')))
+                @endcan
+                  @can('writers')
                     <x-menu-sub title="Settings" icon="o-cog-6-tooth">
                         <x-menu-item title="Wifi" icon="o-wifi" link="####" />
                         <x-menu-item title="Archives" icon="o-archive-box" link="####" />
                     </x-menu-sub>
-                @endif
+                @endcan
             </x-menu>
         </x-slot:sidebar>
 
