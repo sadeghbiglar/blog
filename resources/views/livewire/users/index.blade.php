@@ -2,7 +2,6 @@
 
 use App\Models\User;
 use App\Models\Role;
-use Illuminate\Support\Collection;
 use Livewire\Volt\Component;
 use Mary\Traits\Toast;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,20 +23,18 @@ new class extends Component {
     public function mount(): void
     {
         if (!Gate::allows('admins')) {
-        $this->error('You are not authorized to access this page.', position: 'toast-bottom');
-        redirect()->route('dashboard');
-    }
+            $this->error('You are not authorized to access this page.', position: 'toast-bottom');
+            redirect()->route('dashboard');
+        }
     }
 
-    // Reset pagination when any component property changes
     public function updated($property): void
     {
-        if (! is_array($property) && $property != "") {
+        if (!is_array($property) && $property != "") {
             $this->resetPage();
         }
     }
 
-    // Clear filters
     public function clear(): void
     {
         $this->reset();
@@ -45,39 +42,54 @@ new class extends Component {
         $this->success('Filters cleared.', position: 'toast-bottom');
     }
 
-    // Show role assignment form
     public function showRoleForm($user_id): void
     {
         $this->user_id = $user_id;
         $user = User::findOrFail($user_id);
+
+        // بررسی دسترسی برای تغییر نقش‌ها
+        $this->authorize('updateRoles', $user);
+
         $this->selected_roles = $user->roles->pluck('id')->toArray();
         $this->roleDrawer = true;
     }
 
-    // Save roles for user
     public function saveRoles(): void
     {
         $user = User::findOrFail($this->user_id);
-        $user->roles()->sync($this->selected_roles);
-        $this->success('Roles updated.', position: 'toast-bottom');
-        $this->roleDrawer = false;
+
+        try {
+            $this->authorize('updateRoles', $user);
+
+            // جلوگیری از اینکه admin نقش admin بده
+            if (auth()->user()->hasRole('admin')) {
+                $this->selected_roles = array_filter($this->selected_roles, function ($roleId) {
+                    $role = Role::find($roleId);
+                    return $role && $role->name !== 'admin';
+                });
+            }
+
+            $user->roles()->sync($this->selected_roles);
+
+            $this->success('Roles updated.', position: 'toast-bottom');
+            $this->roleDrawer = false;
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            $this->error('You are not authorized to update roles for this user.', position: 'toast-bottom');
+        }
     }
 
-    // Delete user
-   // Delete user
-public function delete(User $user): void
-{
-    try {
-        $this->authorize('delete', $user);
+    public function delete(User $user): void
+    {
+        try {
+            $this->authorize('delete', $user);
 
-        $user->delete();
-        $this->warning("$user->name deleted", 'Good bye!', position: 'toast-bottom');
-    } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-        $this->error('You are not authorized to delete this user.', position: 'toast-bottom');
+            $user->delete();
+            $this->warning("$user->name deleted", 'Good bye!', position: 'toast-bottom');
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            $this->error('You are not authorized to delete this user.', position: 'toast-bottom');
+        }
     }
-}
 
-    // Table headers
     public function headers(): array
     {
         return [
@@ -107,15 +119,16 @@ public function delete(User $user): void
             'users' => $this->users(),
             'headers' => $this->headers(),
             'countries' => Country::all(), 
-            // فقط نقش‌های غیر از سوپر ادمین
-            'roles' => Role::where('name', '!=', 'super_admin')->get(),
+            'roles' => Role::query()
+                ->when(auth()->user()->hasRole('admin'), fn($q) => $q->whereNotIn('name', ['super_admin', 'admin']))
+                ->when(auth()->user()->hasRole('super_admin'), fn($q) => $q->where('name', '!=', 'super_admin'))
+                ->get(),
         ];
     }
 };
 ?>
 
 <div>
-    <!-- HEADER -->
     <x-header title="لیست کاربران" separator progress-indicator>
         <x-slot:middle class="!justify-end">
             <x-input placeholder="Search..." wire:model.live.debounce="search" clearable icon="o-magnifying-glass" />
@@ -126,7 +139,6 @@ public function delete(User $user): void
         </x-slot:actions>
     </x-header>
 
-    <!-- TABLE  -->
     <x-card shadow>
        <x-table :headers="$headers" :rows="$users" :sort-by="$sortBy" with-pagination>
             @scope('cell_avatar', $user)                                                    
@@ -139,25 +151,28 @@ public function delete(User $user): void
                     @endforeach
                 </div>
             @endscope
-           @scope('actions', $user)
-    <x-button icon="o-pencil" link="users/{{ $user->id }}/edit?name={{ $user->name }}" class="btn-ghost btn-sm" />
-    <x-button icon="o-user" wire:click="showRoleForm({{ $user->id }})" class="btn-ghost btn-sm" />
-    
-    @can('delete', $user)
-        <x-button 
-            icon="o-trash" 
-            wire:click="delete({{ $user['id'] }})" 
-            wire:confirm="Are you sure?" 
-            spinner 
-            class="btn-ghost btn-sm text-error" 
-        />
-    @endcan
-@endscope
+            @scope('actions', $user)
+                @can('update', $user)
+                    <x-button icon="o-pencil" link="users/{{ $user->id }}/edit?name={{ $user->name }}" class="btn-ghost btn-sm" />
+                @endcan
 
+                @can('updateRoles', $user)
+                    <x-button icon="o-user" wire:click="showRoleForm({{ $user->id }})" class="btn-ghost btn-sm" />
+                @endcan
+
+                @can('delete', $user)
+                    <x-button 
+                        icon="o-trash" 
+                        wire:click="delete({{ $user['id'] }})" 
+                        wire:confirm="Are you sure?" 
+                        spinner 
+                        class="btn-ghost btn-sm text-error" 
+                    />
+                @endcan
+            @endscope
         </x-table>
     </x-card>
 
-    <!-- FILTER DRAWER -->
     <x-drawer wire:model="drawer" title="Filters" right separator with-close-button class="lg:w-1/3">
         <x-input placeholder="Search..." wire:model.live.debounce="search" icon="o-magnifying-glass" @keydown.enter="$wire.drawer = false" />
         <x-select placeholder="Country" wire:model.live="country_id" :options="$countries" icon="o-flag" placeholder-value="0" /> 
@@ -168,7 +183,6 @@ public function delete(User $user): void
         </x-slot:actions>
     </x-drawer>
 
-    <!-- ROLE ASSIGNMENT DRAWER -->
     <x-drawer wire:model="roleDrawer" title="Assign Roles" right separator with-close-button class="lg:w-1/3">
         <x-choices
             label="Roles"
