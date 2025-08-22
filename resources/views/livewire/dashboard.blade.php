@@ -1,4 +1,3 @@
-
 <?php
 
 use App\Models\Post;
@@ -11,6 +10,7 @@ use Mary\Traits\Toast;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\WithPagination;
+use Morilog\Jalali\Jalalian;
 
 new class extends Component {
     use Toast, WithPagination;
@@ -18,12 +18,9 @@ new class extends Component {
     public string $search = '';
     public array $sortBy = ['column' => 'created_at', 'direction' => 'desc'];
 
-    // Role drawer
     public bool $roleDrawer = false;
     public array $selected_roles = [];
     public int $user_id = 0;
-
-    // User filter
     public int $country_id = 0;
 
     public function updated($property): void
@@ -33,27 +30,25 @@ new class extends Component {
         }
     }
 
-    // Post actions
     public function deletePost($id): void
     {
         $post = Post::findOrFail($id);
         if (auth()->user()->hasRole('senior_writer') || $post->user_id === auth()->id()) {
             $post->delete();
-            $this->success("Post deleted.", position: 'toast-bottom');
+            $this->success("پست حذف شد.", position: 'toast-bottom');
         } else {
-            $this->error('You are not authorized to delete this post.', position: 'toast-bottom');
+            $this->error('شما اجازه حذف این پست را ندارید.', position: 'toast-bottom');
         }
     }
 
-    // User actions
     public function delete(User $user): void
     {
         try {
             $this->authorize('delete', $user);
             $user->delete();
-            $this->warning("$user->name deleted", 'Good bye!', position: 'toast-bottom');
+            $this->warning("$user->name حذف شد", 'خداحافظ!', position: 'toast-bottom');
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            $this->error('You are not authorized to delete this user.', position: 'toast-bottom');
+            $this->error('شما اجازه حذف این کاربر را ندارید.', position: 'toast-bottom');
         }
     }
 
@@ -64,11 +59,10 @@ new class extends Component {
 
         try {
             $this->authorize('updateRoles', $user);
-
             $this->selected_roles = $user->roles->pluck('id')->toArray();
             $this->roleDrawer = true;
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            $this->error('You are not authorized to update roles for this user.', position: 'toast-bottom');
+            $this->error('شما اجازه تغییر نقش‌های این کاربر را ندارید.', position: 'toast-bottom');
         }
     }
 
@@ -79,7 +73,6 @@ new class extends Component {
         try {
             $this->authorize('updateRoles', $user);
 
-            // Prevent admin from giving 'admin' role
             if (auth()->user()->hasRole('admin')) {
                 $this->selected_roles = array_filter($this->selected_roles, function ($roleId) {
                     $role = Role::find($roleId);
@@ -88,22 +81,21 @@ new class extends Component {
             }
 
             $user->roles()->sync($this->selected_roles);
-            $this->success('Roles updated.', position: 'toast-bottom');
+            $this->success('نقش‌ها بروزرسانی شدند.', position: 'toast-bottom');
             $this->roleDrawer = false;
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            $this->error('You are not authorized to update roles for this user.', position: 'toast-bottom');
+            $this->error('شما اجازه تغییر نقش‌های این کاربر را ندارید.', position: 'toast-bottom');
         }
     }
 
-    // Table headers
     public function postHeaders(): array
     {
         return [
             ['key' => 'id', 'label' => '#', 'class' => 'w-1'],
-            ['key' => 'title', 'label' => 'Title', 'class' => 'w-64'],
-            ['key' => 'published_at', 'label' => 'Published At', 'class' => 'hidden lg:table-cell'],
-            ['key' => 'views', 'label' => 'Views', 'class' => 'w-20'],
-            ['key' => 'likes_count', 'label' => 'Likes', 'class' => 'w-20'],
+            ['key' => 'title', 'label' => 'عنوان', 'class' => 'w-64'],
+            ['key' => 'published_at', 'label' => 'تاریخ انتشار', 'class' => 'hidden lg:table-cell'],
+            ['key' => 'views', 'label' => 'بازدید', 'class' => 'w-20'],
+            ['key' => 'likes_count', 'label' => 'لایک', 'class' => 'w-20'],
         ];
     }
 
@@ -112,14 +104,13 @@ new class extends Component {
         return [
             ['key' => 'avatar', 'label' => '', 'class' => 'w-1'],
             ['key' => 'id', 'label' => '#', 'class' => 'w-1'],
-            ['key' => 'name', 'label' => 'Name', 'class' => 'w-64'],
-            ['key' => 'country_name', 'label' => 'Country', 'class' => 'hidden lg:table-cell'],
-            ['key' => 'email', 'label' => 'E-mail', 'sortable' => false],
-            ['key' => 'roles', 'label' => 'Roles', 'class' => 'hidden lg:table-cell'],
+            ['key' => 'name', 'label' => 'نام', 'class' => 'w-64'],
+            ['key' => 'country_name', 'label' => 'کشور', 'class' => 'hidden lg:table-cell'],
+            ['key' => 'email', 'label' => 'ایمیل', 'sortable' => false],
+            ['key' => 'roles', 'label' => 'نقش‌ها', 'class' => 'hidden lg:table-cell'],
         ];
     }
 
-    // Data queries
     public function posts(): LengthAwarePaginator
     {
         $query = Post::query()->with('user')->withCount('likes');
@@ -187,9 +178,9 @@ new class extends Component {
 ?>
 
 <div>
-    <x-header title="Dashboard" separator progress-indicator>
+    <x-header title="داشبورد" separator progress-indicator>
         <x-slot:middle class="!justify-end">
-            <x-input placeholder="Search..." wire:model.live.debounce="search" clearable icon="o-magnifying-glass" />
+            <x-input placeholder="جستجو..." wire:model.live.debounce="search" clearable icon="o-magnifying-glass" />
         </x-slot:middle>
     </x-header>
 
@@ -197,18 +188,18 @@ new class extends Component {
     <x-card shadow class="mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             @can('writers')
-                <x-card title="Total Posts" class="text-center">
+                <x-card title="کل پست‌ها" class="text-center">
                     <span class="text-2xl font-bold">{{ $stats['total_posts'] }}</span>
                 </x-card>
-                <x-card title="Total Views" class="text-center">
+                <x-card title="کل بازدیدها" class="text-center">
                     <span class="text-2xl font-bold">{{ $stats['total_views'] }}</span>
                 </x-card>
-                <x-card title="Total Likes" class="text-center">
+                <x-card title="کل لایک‌ها" class="text-center">
                     <span class="text-2xl font-bold">{{ $stats['total_likes'] }}</span>
                 </x-card>
             @endcan
             @can('admins')
-                <x-card title="Total Users" class="text-center">
+                <x-card title="کل کاربران" class="text-center">
                     <span class="text-2xl font-bold">{{ $stats['total_users'] }}</span>
                 </x-card>
             @endcan
@@ -218,15 +209,18 @@ new class extends Component {
     <!-- Posts table -->
     @can('writers')
         <x-card shadow class="mb-6">
-            <h2 class="text-lg font-bold mb-4">Your Posts</h2>
+            <h2 class="text-lg font-bold mb-4">پست‌های شما</h2>
             <x-table :headers="$postHeaders" :rows="$posts" :sort-by="$sortBy" with-pagination link="/posts/{id}/edit?title={title}">
+                @scope('cell_published_at', $post)
+                    {{ $post->published_at ? Jalalian::fromCarbon($post->published_at)->format('%d %B %Y') : 'پیش‌نویس' }}
+                @endscope
                 @scope('cell_likes_count', $post)
                     {{ $post->likes_count }}
                 @endscope
                 @scope('actions', $post)
                     @if (auth()->user()->hasRole('senior_writer') || $post->user_id === auth()->id())
                         <x-button icon="o-pencil" link="/posts/{{ $post->id }}/edit?title={{ $post->title }}" class="btn-ghost btn-sm" />
-                        <x-button icon="o-trash" wire:click="deletePost({{ $post->id }})" wire:confirm="Are you sure?" spinner class="btn-ghost btn-sm text-error" />
+                        <x-button icon="o-trash" wire:click="deletePost({{ $post->id }})" wire:confirm="آیا مطمئن هستید؟" spinner class="btn-ghost btn-sm text-error" />
                     @endif
                 @endscope
             </x-table>
@@ -236,7 +230,7 @@ new class extends Component {
     <!-- Users table -->
     @can('admins')
         <x-card shadow>
-            <h2 class="text-lg font-bold mb-4">Users</h2>
+            <h2 class="text-lg font-bold mb-4">کاربران</h2>
             <x-table :headers="$userHeaders" :rows="$users" :sort-by="$sortBy" with-pagination>
                 @scope('cell_avatar', $user)
                     <x-avatar image="{{ $user->avatar ?? '/empty-user.jpg' }}" class="!w-10" />
@@ -262,7 +256,7 @@ new class extends Component {
                         <x-button 
                             icon="o-trash" 
                             wire:click="delete({{ $user->id }})" 
-                            wire:confirm="Are you sure?" 
+                            wire:confirm="آیا مطمئن هستید؟" 
                             spinner 
                             class="btn-ghost btn-sm text-error" 
                         />
@@ -272,20 +266,20 @@ new class extends Component {
         </x-card>
 
         <!-- Role assignment drawer -->
-        <x-drawer wire:model="roleDrawer" title="Assign Roles" right separator with-close-button class="lg:w-1/3">
+        <x-drawer wire:model="roleDrawer" title="تعیین نقش‌ها" right separator with-close-button class="lg:w-1/3">
             <x-choices
-                label="Roles"
+                label="نقش‌ها"
                 wire:model="selected_roles"
                 :options="$roles"
                 option-value="id"
                 option-label="name"
                 icon="o-user"
-                hint="Select roles for the user"
+                hint="نقش‌ها را انتخاب کنید"
                 multiple
             />
             <x-slot:actions>
-                <x-button label="Cancel" @click="$wire.roleDrawer = false" />
-                <x-button label="Save" wire:click="saveRoles" class="btn-primary" spinner />
+                <x-button label="لغو" @click="$wire.roleDrawer = false" />
+                <x-button label="ذخیره" wire:click="saveRoles" class="btn-primary" spinner />
             </x-slot:actions>
         </x-drawer>
     @endcan

@@ -12,7 +12,7 @@ use Livewire\WithFileUploads;
 
 new
 #[Layout('components.layouts.empty')]
-#[Title('Create Post')]
+#[Title('ایجاد پست جدید')]
 class extends Component {
     use Toast, WithFileUploads;
 
@@ -27,19 +27,17 @@ class extends Component {
 
     public bool $published = false;
 
-    // دسته‌هایی که کاربر انتخاب می‌کند
     #[Rule('nullable|array')]
     public array $selectedCategories = [];
 
-    // گزینه‌های موجود برای انتخاب
     public array $categoryOptions = [];
 
     public function mount(): void
     {
-       if (!Gate::allows('writers')) {
-        $this->error('You are not authorized to access this page.', position: 'toast-bottom');
-        redirect()->route('dashboard');
-    }
+        if (!Gate::allows('writers')) {
+            $this->error('شما اجازه دسترسی به این صفحه را ندارید.', position: 'toast-bottom');
+            redirect()->route('dashboard');
+        }
 
         $this->categoryOptions = Category::all()->map(function ($category) {
             return ['id' => (string) $category->id, 'name' => $category->name];
@@ -47,9 +45,9 @@ class extends Component {
 
         if (empty($this->categoryOptions)) {
             $this->categoryOptions = [
-                ['id' => '1', 'name' => 'Test Category 1'],
-                ['id' => '2', 'name' => 'Test Category 2'],
-                ['id' => '3', 'name' => 'Test Category 3'],
+                ['id' => '1', 'name' => 'دسته تست ۱'],
+                ['id' => '2', 'name' => 'دسته تست ۲'],
+                ['id' => '3', 'name' => 'دسته تست ۳'],
             ];
         }
     }
@@ -73,7 +71,7 @@ class extends Component {
             $post->categories()->sync($validated['selectedCategories']);
         }
 
-        $this->success('Post created successfully.', position: 'toast-bottom');
+        $this->success('پست با موفقیت ایجاد شد.', position: 'toast-bottom');
         redirect()->route('posts.index');
     }
 
@@ -83,38 +81,38 @@ class extends Component {
             'categoryOptions' => $this->categoryOptions,
         ];
     }
-}; 
+};
 ?>
 
 <div class="md:w-3/4 mx-auto mt-10">
-    <x-header title="Create New Post" separator progress-indicator>
+    <x-header title="ایجاد پست جدید" separator progress-indicator>
         <x-slot:actions>
-            <x-button label="Back to Posts" link="/posts" icon="o-arrow-left" class="btn-ghost" />
+            <x-button label="بازگشت به پست‌ها" link="/posts" icon="o-arrow-left" class="btn-ghost" />
         </x-slot:actions>
     </x-header>
 
     <x-card shadow>
         <x-form wire:submit="save">
-            <x-input label="Title" wire:model="title" placeholder="Enter post title" icon="o-pencil" />
-            <x-textarea label="Content" wire:model="content" placeholder="Write your content here..." rows="10" tinymce />
-            <x-input label="Image" wire:model="image" type="file" accept="image/*" />
+            <x-input label="عنوان" wire:model="title" placeholder="عنوان پست را وارد کنید" icon="o-pencil" />
+            <x-textarea label="محتوا" wire:model="content" placeholder="محتوای خود را اینجا بنویسید..." rows="10" tinymce />
+            <x-input label="تصویر" wire:model="image" type="file" accept="image/*" />
             
             <x-choices
-                label="Categories"
+                label="دسته‌بندی‌ها"
                 wire:model="selectedCategories"
                 :options="$categoryOptions"
                 option-value="id"
                 option-label="name"
                 multiple
-                placeholder="Select categories"
-                hint="Select categories for the post"
+                placeholder="دسته‌ها را انتخاب کنید"
+                hint="دسته‌بندی‌های مربوط به پست را انتخاب کنید"
             />
 
-            <x-checkbox label="Publish immediately" wire:model="published" />
+            <x-checkbox label="انتشار فوری" wire:model="published" />
 
             <x-slot:actions>
-                <x-button label="Cancel" link="/posts" class="btn-ghost" />
-                <x-button label="Save" type="submit" icon="o-check" class="btn-primary" spinner="save" />
+                <x-button label="لغو" link="/posts" class="btn-ghost" />
+                <x-button label="ذخیره" type="submit" icon="o-check" class="btn-primary" spinner="save" />
             </x-slot:actions>
         </x-form>
     </x-card>

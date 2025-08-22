@@ -7,6 +7,7 @@ use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\WithPagination;
+use Morilog\Jalali\Jalalian;
 
 new
 #[Layout('components.layouts.empty')]
@@ -23,7 +24,7 @@ class extends Component {
 
     public function title(): string
     {
-        return $this->category->name . ' Posts';
+        return $this->category->name . ' - پست‌ها';
     }
 
     public function posts(): LengthAwarePaginator
@@ -44,7 +45,8 @@ class extends Component {
             'posts' => $this->posts(),
         ];
     }
-}; ?>
+};
+?>
 
 <div class="md:w-3/4 mx-auto mt-10">
     <div class="mb-10">
@@ -52,26 +54,36 @@ class extends Component {
     </div>
 
     <x-card shadow>
-        <h1 class="text-2xl font-bold mb-4">{{ $category->name }} Posts</h1>
-        <p class="text-sm text-gray-500 mb-4">Explore posts in the {{ $category->name }} category</p>
+        <h1 class="text-2xl font-bold mb-4">{{ $category->name }} - پست‌ها</h1>
+        <p class="text-sm text-gray-500 mb-4">پست‌های دسته‌بندی {{ $category->name }} را مشاهده کنید</p>
 
         <div class="space-y-4">
             @forelse ($posts as $post)
                 <div class="bg-gray-100 p-4 rounded">
                     <h2 class="text-xl font-bold">{{ $post->title }}</h2>
-                    <p class="text-sm text-gray-500">By {{ $post->user->name }} | {{ $post->published_at ? $post->published_at->format('M d, Y') : 'Not Published' }}</p>
+                    <p class="text-sm text-gray-500">
+                        نویسنده: 
+                        {{ $post->user->name }} 
+                    </p>
+                     <p class="text-sm text-gray-500">
+                      
+                        {{ $post->published_at ? Jalalian::fromDateTime($post->published_at)->format('Y/m/d') : 'منتشر نشده' }}
+                    </p>
+
                     @if ($post->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($post->image))
                         <img src="{{ \Illuminate\Support\Facades\Storage::url($post->image) }}" alt="{{ $post->title }}" class="w-full h-48 object-cover rounded mb-4" />
                     @else
-                        <img src="/default-image.png" alt="Default Image" class="w-full h-48 object-cover rounded mb-4" />
+                        <img src="/default-image.png" alt="تصویر پیش‌فرض" class="w-full h-48 object-cover rounded mb-4" />
                     @endif
+
                     <div class="prose max-w-none">{!! \Illuminate\Support\Str::limit(strip_tags($post->content), 150) !!}</div>
+
                     <div class="mt-4">
-                        <x-button label="Read More" link="{{ route('posts.show', $post->id) }}" icon="o-arrow-right" class="btn-primary" />
+                        <x-button label="ادامه مطلب" link="{{ route('posts.show', $post->id) }}" icon="o-arrow-right" class="btn-primary" />
                     </div>
                 </div>
             @empty
-                <p class="text-gray-500">No posts found in this category.</p>
+                <p class="text-gray-500">هیچ پستی در این دسته‌بندی یافت نشد.</p>
             @endforelse
 
             {{ $posts->links() }}

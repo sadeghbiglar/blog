@@ -12,7 +12,7 @@ use Livewire\WithFileUploads;
 
 new
 #[Layout('components.layouts.empty')]
-#[Title('Edit Post')]
+#[Title('ویرایش پست')]
 class extends Component {
     use Toast, WithFileUploads;
 
@@ -37,9 +37,9 @@ class extends Component {
     public function mount(Post $post): void
     {
         if (!Gate::allows('writers')) {
-        $this->error('You are not authorized to access this page.', position: 'toast-bottom');
-        redirect()->route('dashboard');
-    }
+            $this->error('شما اجازه دسترسی به این صفحه را ندارید.', position: 'toast-bottom');
+            redirect()->route('dashboard');
+        }
 
         $this->post = $post;
 
@@ -55,9 +55,9 @@ class extends Component {
 
         if (empty($this->categoryOptions)) {
             $this->categoryOptions = [
-                ['id' => '1', 'name' => 'Test Category 1'],
-                ['id' => '2', 'name' => 'Test Category 2'],
-                ['id' => '3', 'name' => 'Test Category 3'],
+                ['id' => '1', 'name' => 'دسته تست ۱'],
+                ['id' => '2', 'name' => 'دسته تست ۲'],
+                ['id' => '3', 'name' => 'دسته تست ۳'],
             ];
         }
 
@@ -83,7 +83,7 @@ class extends Component {
             $this->post->categories()->detach();
         }
 
-        $this->success('Post updated successfully.', position: 'toast-bottom');
+        $this->success('پست با موفقیت بروزرسانی شد.', position: 'toast-bottom');
         redirect()->route('posts.index');
     }
 
@@ -97,35 +97,35 @@ class extends Component {
 ?>
 
 <div class="md:w-3/4 mx-auto mt-10">
-    <x-header title="Edit Post" separator progress-indicator>
+    <x-header title="ویرایش پست" separator progress-indicator>
         <x-slot:actions>
-            <x-button label="Back to Posts" link="/posts" icon="o-arrow-left" class="btn-ghost" />
+            <x-button label="بازگشت به پست‌ها" link="/posts" icon="o-arrow-left" class="btn-ghost" />
         </x-slot:actions>
     </x-header>
 
     <x-card shadow>
         <x-form wire:submit="update">
-            <x-input label="Title" wire:model="title" placeholder="Enter post title" icon="o-pencil" />
-            <x-textarea label="Content" wire:model="content" placeholder="Write your content here..." rows="10" tinymce />
+            <x-input label="عنوان" wire:model="title" placeholder="عنوان پست را وارد کنید" icon="o-pencil" />
+            <x-textarea label="محتوا" wire:model="content" placeholder="محتوای خود را اینجا بنویسید..." rows="10" tinymce />
 
-            <x-input label="Image" wire:model="image" type="file" accept="image/*" />
+            <x-input label="تصویر" wire:model="image" type="file" accept="image/*" />
 
             <x-choices
-                label="Categories"
+                label="دسته‌بندی‌ها"
                 wire:model="selectedCategories"
                 :options="$categoryOptions"
                 option-value="id"
                 option-label="name"
                 multiple
-                placeholder="Select categories"
-                hint="Select categories for the post"
+                placeholder="دسته‌ها را انتخاب کنید"
+                hint="دسته‌بندی‌های مربوط به پست را انتخاب کنید"
             />
 
-            <x-checkbox label="Publish immediately" wire:model="published" />
+            <x-checkbox label="انتشار فوری" wire:model="published" />
 
             <x-slot:actions>
-                <x-button label="Cancel" link="/posts" class="btn-ghost" />
-                <x-button label="Update" type="submit" icon="o-check" class="btn-primary" spinner="update" />
+                <x-button label="لغو" link="/posts" class="btn-ghost" />
+                <x-button label="بروزرسانی" type="submit" icon="o-check" class="btn-primary" spinner="update" />
             </x-slot:actions>
         </x-form>
     </x-card>

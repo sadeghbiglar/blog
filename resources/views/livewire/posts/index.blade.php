@@ -7,6 +7,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Volt\Component;
 use Mary\Traits\Toast;
 use Livewire\WithPagination;
+use Morilog\Jalali\Jalalian;
+use Illuminate\Support\Facades\Gate;
 
 new class extends Component
 {
@@ -18,10 +20,10 @@ new class extends Component
 
     public function mount(): void
     {
-       if (!Gate::allows('writers')) {
-        $this->error('You are not authorized to access this page.', position: 'toast-bottom');
-        redirect()->route('dashboard');
-    }
+        if (!Gate::allows('writers')) {
+            $this->error('شما اجازه دسترسی به این صفحه را ندارید.', position: 'toast-bottom');
+            redirect()->route('dashboard');
+        }
     }
 
     public function updated($property): void
@@ -35,36 +37,35 @@ new class extends Component
     {
         $this->reset();
         $this->resetPage();
-        $this->success('Filters cleared.', position: 'toast-bottom');
+        $this->success('فیلترها پاک شدند.', position: 'toast-bottom');
     }
 
     public function delete(Post $post): void
     {
         if (auth()->user()->hasRole('admin') || auth()->user()->hasRole('senior_writer') || auth()->user()->id === $post->user_id) {
             $post->delete();
-            $this->success('Post deleted.', position: 'toast-bottom');
+            $this->success('پست حذف شد.', position: 'toast-bottom');
         } else {
-            $this->error('Unauthorized action.', position: 'toast-bottom');
+            $this->error('عملیات غیرمجاز.', position: 'toast-bottom');
         }
     }
 
     public function headers(): array
     {
         return [
-            // ['key' => 'image', 'label' => '', 'class' => 'w-1'],
             ['key' => 'id', 'label' => '#', 'class' => 'w-1'],
-            ['key' => 'title', 'label' => 'Title'],
-            ['key' => 'user_name', 'label' => 'Author', 'class' => 'hidden lg:table-cell'],
-            ['key' => 'published_at', 'label' => 'Published', 'class' => 'hidden lg:table-cell'],
-            ['key' => 'views', 'label' => 'Views', 'class' => 'hidden lg:table-cell'],
-            ['key' => 'likes_count', 'label' => 'Likes', 'class' => 'hidden lg:table-cell'],
+            ['key' => 'title', 'label' => 'عنوان'],
+            ['key' => 'user_name', 'label' => 'نویسنده', 'class' => 'hidden lg:table-cell'],
+            ['key' => 'published_at', 'label' => 'تاریخ انتشار', 'class' => 'hidden lg:table-cell'],
+            ['key' => 'views', 'label' => 'بازدید', 'class' => 'hidden lg:table-cell'],
+            ['key' => 'likes_count', 'label' => 'لایک', 'class' => 'hidden lg:table-cell'],
         ];
     }
 
     public function posts(): LengthAwarePaginator
     {
         $query = Post::query()
-            ->withAggregate('user', 'name')
+            ->with('user')
             ->withCount('likes')
             ->when($this->search, fn(Builder $q) => $q->where('title', 'like', "%$this->search%"))
             ->when($this->published, fn(Builder $q) => $q->whereNotNull('published_at'));
@@ -83,37 +84,38 @@ new class extends Component
             'headers' => $this->headers(),
         ];
     }
-}; ?>
+};
+?>
 
 <div>
-    <x-header title="Posts" separator progress-indicator>
+    <x-header title="پست‌ها" separator progress-indicator>
         <x-slot:middle class="!justify-end">
-            <x-input placeholder="Search..." wire:model.live.debounce="search" clearable icon="o-magnifying-glass" />
+            <x-input placeholder="جستجو..." wire:model.live.debounce="search" clearable icon="o-magnifying-glass" />
         </x-slot:middle>
         <x-slot:actions>
-            <x-checkbox label="Published only" wire:model.live="published" />
-            <x-button label="Create" link="/posts/create" responsive icon="o-plus" class="btn-primary" />
+            <x-checkbox label="فقط منتشر شده‌ها" wire:model.live="published" />
+            <x-button label="ایجاد پست" link="/posts/create" responsive icon="o-plus" class="btn-primary" />
         </x-slot:actions>
     </x-header>
 
     <x-card shadow>
         <x-table :headers="$headers" :rows="$posts" :sort-by="$sortBy" with-pagination>
-            <!-- @scope('cell_image', $post)
-                <x-avatar image="{{ $post->image ? Storage::url($post->image) : '/empty-post.jpg' }}" class="!w-10" />
-            @endscope -->
             @scope('cell_title', $post)
                 <a href="{{ route('posts.show', $post->id) }}" class="text-blue-600 hover:underline">{{ $post->title }}</a>
             @endscope
+
             @scope('cell_published_at', $post)
-                {{ $post->published_at?->format('M d, Y') ?? 'Draft' }}
+                {{ $post->published_at ? Jalalian::fromCarbon($post->published_at)->format('%d %B %Y') : 'پیش‌نویس' }}
             @endscope
+
             @scope('cell_likes_count', $post)
                 {{ $post->likes_count }}
             @endscope
+
             @scope('actions', $post)
                 @if (auth()->user()->hasRole('admin') || auth()->user()->hasRole('senior_writer') || auth()->user()->id === $post->user_id)
                     <x-button icon="o-pencil" link="posts/{{ $post->id }}/edit" class="btn-ghost btn-sm" />
-                    <x-button icon="o-trash" wire:click="delete({{ $post->id }})" wire:confirm="Are you sure?" spinner class="btn-ghost btn-sm text-error" />
+                    <x-button icon="o-trash" wire:click="delete({{ $post->id }})" wire:confirm="آیا مطمئن هستید؟" spinner class="btn-ghost btn-sm text-error" />
                 @endif
             @endscope
         </x-table>
