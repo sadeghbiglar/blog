@@ -102,16 +102,33 @@ new class extends Component {
         ];
     }
 
-    public function users(): LengthAwarePaginator 
-    {
-        return User::query()
-            ->withAggregate('country', 'name') 
-            ->with('roles')
-            ->when($this->search, fn(Builder $q) => $q->where('name', 'like', "%$this->search%"))
-            ->when($this->country_id, fn(Builder $q) => $q->where('country_id', $this->country_id)) 
-            ->orderBy(...array_values($this->sortBy))
-            ->paginate(5);
-    }
+    // public function users(): LengthAwarePaginator 
+    // {
+    //     return User::query()
+    //         ->withAggregate('country', 'name') 
+    //         ->with('roles')
+    //         ->when($this->search, fn(Builder $q) => $q->where('name', 'like', "%$this->search%"))
+    //         ->when($this->country_id, fn(Builder $q) => $q->where('country_id', $this->country_id)) 
+    //         ->orderBy(...array_values($this->sortBy))
+    //         ->paginate(5);
+    // }
+public function users(): LengthAwarePaginator 
+{
+    return User::query()
+        ->withAggregate('country', 'name')
+        ->with('roles')
+        ->when($this->search, fn(Builder $q) => $q->where('name', 'like', "%$this->search%"))
+        ->when($this->country_id, fn(Builder $q) => $q->where('country_id', $this->country_id))
+        ->when($this->sortBy['column'] === 'roles', function (Builder $q) {
+            $q->leftJoin('role_user', 'users.id', '=', 'role_user.user_id')
+              ->leftJoin('roles', 'roles.id', '=', 'role_user.role_id')
+              ->select('users.*', 'roles.name as role_name')
+              ->orderBy('role_name', $this->sortBy['direction']);
+        }, function (Builder $q) {
+            $q->orderBy($this->sortBy['column'], $this->sortBy['direction']);
+        })
+        ->paginate(5);
+}
 
     public function with(): array
     {
