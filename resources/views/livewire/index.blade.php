@@ -18,6 +18,13 @@ class extends Component {
     public string $search = '';
     public array $sortBy = ['column' => 'published_at', 'direction' => 'desc'];
 
+    // Reset pagination when any component property changes
+public function updated($property): void
+{
+    if (! is_array($property) && $property != "") {
+        $this->resetPage();
+    }
+}
     public function posts(): LengthAwarePaginator
     {
         return Post::query()
