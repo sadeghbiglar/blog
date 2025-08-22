@@ -40,3 +40,7 @@
 .mary-table-pagination button {
     @apply cursor-pointer
 }
+
+body, html, input, textarea, select, button {
+    font-family: 'Vazir', sans-serif;
+}

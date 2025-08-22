@@ -10,7 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <!-- Locale فارسی رو اضافه می‌کنیم -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fa.js"></script>
-    
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@30.1.0/dist/font-face.css" rel="stylesheet" type="text/css" />
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen font-sans antialiased bg-base-200">

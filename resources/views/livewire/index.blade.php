@@ -94,7 +94,7 @@ public function updated($property): void
     <x-user-menu />
 
     <!-- Header -->
-    <x-site-header title="Welcome to Our Blog" subtitle="Discover the latest posts and insights" />
+    <x-site-header title="دفترچه یادداشت های من " subtitle="تجربیات ،یادداشت ها و مطالعات روزانه من اینجا ثبت میشن " />
 
     <!-- Navbar -->
     <x-navbar />
