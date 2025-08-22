@@ -4,6 +4,7 @@ use App\Models\Post;
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
+use Morilog\Jalali\Jalalian;
 
 new 
 #[Layout('components.layouts.empty')]
@@ -43,7 +44,6 @@ class extends Component
     {
         $posts = $this->posts();
 
-        // Related posts برای هر پست
         $relatedPosts = [];
         foreach ($posts as $post) {
             $relatedPosts[$post->id] = Post::query()
@@ -58,7 +58,7 @@ class extends Component
             'posts' => $posts,
             'previousYear' => $this->previousYear(),
             'nextYear' => $this->nextYear(),
-            'seoTitle' => 'Posts from ' . $this->year,
+            'seoTitle' => 'آرشیو پست‌ها - ' . Jalalian::fromCarbon(\Carbon\Carbon::create($this->year,12,31))->format('Y'),
             'relatedPosts' => $relatedPosts,
         ];
     }
@@ -73,20 +73,28 @@ class extends Component
     <!-- Breadcrumb -->
     <nav class="text-sm mb-4" aria-label="Breadcrumb">
         <ol class="list-reset flex flex-wrap text-gray-500">
-            <li><a href="/" class="text-blue-600 hover:underline">Home</a></li>
+            <li><a href="/" class="text-blue-600 hover:underline">خانه</a></li>
             <li><span class="mx-2">/</span></li>
-            <li><a href="{{ route('posts.archive', $year) }}" class="text-blue-600 hover:underline">Archive</a></li>
+            <li><a href="{{ route('posts.archive', $year) }}" class="text-blue-600 hover:underline">آرشیو</a></li>
             <li><span class="mx-2">/</span></li>
-            <li class="text-gray-700">{{ $year }}</li>
+            <li class="text-gray-700">{{ Jalalian::fromCarbon(\Carbon\Carbon::create($year,12,31))->format('Y') }}</li>
         </ol>
     </nav>
 
-    <h1 class="text-2xl font-bold mb-4 text-center sm:text-left">{{ $seoTitle }}</h1>
+    <h1 class="text-2xl font-bold mb-4 text-center sm:text-left">
+        {{ Jalalian::fromCarbon(\Carbon\Carbon::create($year,12,31))->format('Y') }} - آرشیو پست‌ها
+    </h1>
 
     <!-- Previous / Next Year Buttons -->
     <div class="flex flex-col sm:flex-row justify-between mb-6 gap-2">
-        <a href="{{ route('posts.archive', $previousYear) }}" class="bg-gray-200 hover:bg-gray-300 text-center sm:text-left px-4 py-2 rounded-md w-full sm:w-auto">← {{ $previousYear }}</a>
-        <a href="{{ route('posts.archive', $nextYear) }}" class="bg-gray-200 hover:bg-gray-300 text-center sm:text-right px-4 py-2 rounded-md w-full sm:w-auto">{{ $nextYear }} →</a>
+        <a href="{{ route('posts.archive', $previousYear) }}" 
+           class="bg-gray-200 hover:bg-gray-300 text-center sm:text-left px-4 py-2 rounded-md w-full sm:w-auto">
+            ← {{ Jalalian::fromCarbon(\Carbon\Carbon::create($previousYear,12,31))->format('Y') }}
+        </a>
+        <a href="{{ route('posts.archive', $nextYear) }}" 
+           class="bg-gray-200 hover:bg-gray-300 text-center sm:text-right px-4 py-2 rounded-md w-full sm:w-auto">
+            {{ Jalalian::fromCarbon(\Carbon\Carbon::create($nextYear,12,31))->format('Y') }} →
+        </a>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -94,11 +102,17 @@ class extends Component
         <!-- Left Sidebar -->
         <aside class="lg:col-span-1 order-2 lg:order-1">
             <div class="lg:sticky lg:top-20 bg-white shadow rounded-md p-4 mb-6">
-                <h3 class="text-lg font-bold mb-4">Archive Navigation</h3>
+                <h3 class="text-lg font-bold mb-4">ناوبری آرشیو</h3>
                 <div class="flex flex-col gap-2">
-                    <a href="{{ route('posts.archive', $previousYear) }}" class="text-blue-600 hover:underline">← {{ $previousYear }}</a>
-                    <a href="{{ route('posts.archive', $year) }}" class="text-gray-700 font-semibold">{{ $year }}</a>
-                    <a href="{{ route('posts.archive', $nextYear) }}" class="text-blue-600 hover:underline">{{ $nextYear }} →</a>
+                    <a href="{{ route('posts.archive', $previousYear) }}" 
+                       class="text-blue-600 hover:underline">← {{ Jalalian::fromCarbon(\Carbon\Carbon::create($previousYear,12,31))->format('Y') }}</a>
+                    <a href="{{ route('posts.archive', $year) }}" class="text-gray-700 font-semibold">
+                        {{ Jalalian::fromCarbon(\Carbon\Carbon::create($year,12,31))->format('Y') }}
+                    </a>
+                    <a href="{{ route('posts.archive', $nextYear) }}" 
+                       class="text-blue-600 hover:underline">
+                        {{ Jalalian::fromCarbon(\Carbon\Carbon::create($nextYear,12,31))->format('Y') }} →
+                    </a>
                 </div>
             </div>
         </aside>
@@ -106,7 +120,7 @@ class extends Component
         <!-- Main Content -->
         <div class="lg:col-span-2 order-1 lg:order-2">
             @if($posts->isEmpty())
-                <p class="text-gray-500 text-center">No posts found for this year.</p>
+                <p class="text-gray-500 text-center">هیچ پستی برای این سال پیدا نشد.</p>
             @else
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     @foreach ($posts as $post)
@@ -115,15 +129,18 @@ class extends Component
                                 <a href="{{ route('posts.show', $post->id) }}" class="text-blue-600 hover:underline">{{ $post->title }}</a>
                             </h2>
                             <p class="text-sm text-gray-500 mb-2">
-                                By {{ $post->user->name }} | {{ $post->published_at->format('M d, Y') }}
+                              توسط   {{ $post->user->name }}  
+                             </p>
+                             <p class="text-sm text-gray-500 mb-2">
+                                {{ Jalalian::fromCarbon($post->published_at)->format('%d %B %Y') }}
                             </p>
                             <p class="text-gray-600 mb-2">{{ \Illuminate\Support\Str::limit(strip_tags($post->content), 150) }}</p>
-                            <p class="text-sm text-gray-500 mt-auto">Views: {{ $post->views }} | Likes: {{ $post->likes_count }} | Comments: {{ $post->comments_count }}</p>
+                            <p class="text-sm text-gray-500 mt-auto">بازدید: {{ $post->views }} | لایک: {{ $post->likes_count }} | نظر: {{ $post->comments_count }}</p>
 
                             <!-- Related Posts -->
                             @if(isset($relatedPosts[$post->id]) && $relatedPosts[$post->id]->isNotEmpty())
                                 <div class="mt-4 border-t pt-2">
-                                    <h3 class="text-sm font-semibold mb-2 text-gray-700">Related Posts ({{ $year }})</h3>
+                                    <h3 class="text-sm font-semibold mb-2 text-gray-700">پست‌های مرتبط ({{ Jalalian::fromCarbon($post->published_at)->format('Y') }})</h3>
                                     <ul class="text-sm text-blue-600 flex flex-col gap-1">
                                         @foreach($relatedPosts[$post->id] as $relPost)
                                             <li><a href="{{ route('posts.show', $relPost->id) }}" class="hover:underline">{{ \Illuminate\Support\Str::limit($relPost->title, 40) }}</a></li>
@@ -144,11 +161,11 @@ class extends Component
         <!-- Right Sidebar -->
         <aside class="lg:col-span-1 order-3">
             <div class="lg:sticky lg:top-20 bg-white shadow rounded-md p-4 mb-6">
-                <h3 class="text-lg font-bold mb-4">Quick Links</h3>
+                <h3 class="text-lg font-bold mb-4">لینک‌های سریع</h3>
                 <ul class="flex flex-col gap-2 text-sm text-gray-700">
-                    <li><a href="/" class="hover:underline">Home</a></li>
-                    <li><a href="{{ route('posts.archive', $previousYear) }}" class="hover:underline">Previous Year</a></li>
-                    <li><a href="{{ route('posts.archive', $nextYear) }}" class="hover:underline">Next Year</a></li>
+                    <li><a href="/" class="hover:underline">خانه</a></li>
+                    <li><a href="{{ route('posts.archive', $previousYear) }}" class="hover:underline">سال قبل</a></li>
+                    <li><a href="{{ route('posts.archive', $nextYear) }}" class="hover:underline">سال بعد</a></li>
                 </ul>
             </div>
         </aside>
@@ -157,7 +174,7 @@ class extends Component
 
     <!-- Back to Top Button -->
     <button id="backToTop" class="fixed bottom-6 right-6 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hidden hover:bg-blue-700 transition">
-        ↑ Top
+        ↑ بالا
     </button>
 
 </div>

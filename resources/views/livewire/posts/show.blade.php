@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 use Mary\Traits\Toast;
+use Morilog\Jalali\Jalalian; // 👈 اضافه شد
 
 new
 #[Layout('components.layouts.empty')]
@@ -94,7 +95,10 @@ class extends Component {
 
     <x-card shadow>
         <h1 class="text-2xl font-bold mb-4">{{ $post->title }}</h1>
-        <p class="text-sm text-gray-500 mb-4">By {{ $post->user->name }} | {{ $post->published_at ? $post->published_at->format('M d, Y') : 'Not Published' }}</p>
+        <p class="text-sm text-gray-500 mb-4">
+            By {{ $post->user->name }} |
+            {{ $post->published_at ? Jalalian::fromDateTime($post->published_at)->format('Y/m/d') : 'منتشر نشده' }}
+        </p>
 
         @if ($post->categories->isNotEmpty())
             <div class="mb-4 flex flex-wrap gap-2">
@@ -109,7 +113,9 @@ class extends Component {
         <img src="{{ $post->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($post->image) ? \Illuminate\Support\Facades\Storage::url($post->image) : '/default-image.png' }}" alt="{{ $post->title }}" class="w-full h-64 object-cover rounded mb-4" />
 
         <div class="prose max-w-none">{!! $post->content !!}</div>
-        <p class="text-sm text-gray-500 mt-4">Views: {{ $post->views }} | Likes: {{ $post->likes->count() }}</p>
+        <p class="text-sm text-gray-500 mt-4">
+            بازدید: {{ $post->views }} | لایک: {{ $post->likes->count() }}
+        </p>
 
         <div class="mt-4 flex flex-wrap gap-2">
             <x-button label="{{ auth()->check() && $post->likedByUser(auth()->id()) ? 'Unlike' : 'Like' }}" wire:click="toggleLike" icon="o-heart" class="btn-primary" spinner="toggleLike" />
@@ -130,7 +136,10 @@ class extends Component {
         @else
             @foreach ($post->comments as $comment)
                 <div class="mt-4 p-4 bg-gray-100 rounded">
-                    <p class="text-sm"><strong>{{ $comment->user->name }}</strong> on {{ $comment->created_at->format('M d, Y H:i') }}</p>
+                    <p class="text-sm">
+                        <strong>{{ $comment->user->name }}</strong> 
+                        در {{ Jalalian::fromDateTime($comment->created_at)->format('Y/m/d H:i') }}
+                    </p>
                     <p>{{ $comment->content }}</p>
 
                     @auth
