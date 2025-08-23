@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('words', function (Blueprint $table) {
             $table->id();
              $table->string('word_en'); // کلمه انگلیسی
-        $table->string('meaning_fa'); // معنی فارسی
-        $table->string('image_url')->nullable(); // لینک عکس
+            $table->string('meaning_fa'); // معنی فارسی
+            $table->string('image_url')->nullable(); // لینک عکس
+            $table->integer('stage')->default(1);
             $table->timestamps();
         });
     }

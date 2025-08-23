@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
           $this->call(LikeSeeder::class);
           $this->call(CategorySeeder::class);
           $this->call(CategoryPostSeeder::class);
+          $this->call(WordSeeder::class);
 
     }
 }
