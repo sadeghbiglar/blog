@@ -183,7 +183,9 @@ new class extends Component {
             <x-input placeholder="جستجو..." wire:model.live.debounce="search" clearable icon="o-magnifying-glass" />
         </x-slot:middle>
     </x-header>
-
+<div id="vue-app">
+        <example-component></example-component>
+    </div>
     <!-- Stats -->
     <x-card shadow class="mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">

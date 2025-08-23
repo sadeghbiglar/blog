@@ -61,5 +61,6 @@
     </x-main>
 
     <x-toast />
+    
 </body>
 </html>
