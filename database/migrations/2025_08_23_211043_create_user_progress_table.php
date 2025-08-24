@@ -16,6 +16,9 @@ return new class extends Migration
         $table->unsignedBigInteger('user_id');
         $table->integer('current_stage')->default(1); // مرحله فعلی
         $table->integer('repeat_count')->default(0);  // چند بار تکرار
+        $table->boolean('in_special')->default(false);
+           // آخرین مرحله‌ی عادی که کاربر موفق شده؛ برای محاسبه‌ی بازه‌ی مرحله ویژه
+        $table->unsignedInteger('last_completed_stage')->default(0);
         $table->timestamps();
 
         $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
