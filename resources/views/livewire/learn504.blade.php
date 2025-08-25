@@ -10,10 +10,24 @@ new class extends Component {
 
     public function mount() {
         $user = auth()->user();
+        // در mount کامپوننت Volt مربوط به صفحه learn504
+$TOTAL_STAGES = 42;
+
+
         $progress = UserProgress::firstOrCreate(
             ['user_id' => $user->id],
             ['current_stage' => 1, 'repeat_count' => 0, 'in_special' => false, 'last_completed_stage' => 0]
         );
+if (!$progress->in_special && (int)$progress->last_completed_stage >= $TOTAL_STAGES && (int)$progress->repeat_count === 0) {
+    $this->initialState = [
+        'type'         => 'completed',
+        'label'        => '🎉 تبریک! تمام مراحل را به پایان رساندید.',
+        'stage'        => (int)$progress->last_completed_stage,
+        'repeat_count' => 0,
+        'words'        => [],
+    ];
+    return;
+}
 
         if ($progress->in_special) {
             $last = max(1, (int) $progress->last_completed_stage);

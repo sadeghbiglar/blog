@@ -155,24 +155,31 @@ export default {
       }
     },
     async loadState() {
-      this.banner = 'دریافت وضعیت جدید...';
-      const res = await fetch('/learn504/state', {
-        headers: { 'Accept': 'application/json' },
-      });
-      const s = await res.json();
+  this.banner = 'دریافت وضعیت جدید...';
+  const res = await fetch('/learn504/state', { headers: { 'Accept': 'application/json' } });
+  const s = await res.json();
 
-      this.state = {
-        type: s.type,
-        label: s.label,
-        stage: s.stage,
-        repeat_count: s.repeat_count,
-        words: s.words || [],
-      };
-      // در UI، شمارش نمایش را از repeat_count مشتق می‌کنیم
-      this.localRepeatCount = Math.max(1, (s.repeat_count || 0) + 1);
-      this.restartStageFrom(this.state.words);
-      this.banner = '';
-    },
+  this.state = {
+    type: s.type,
+    label: s.label,
+    stage: s.stage,
+    repeat_count: s.repeat_count,
+    words: s.words || [],
+  };
+
+  // 👇 اضافه‌شده: پایان دوره
+  if (this.state.type === 'completed') {
+    this.stageCompleted = false;
+    this.shuffledWords = [];
+    this.banner = '';
+    // اینجا می‌تونی یک مودال یا پیام بزرگ هم نشون بدی
+    return;
+  }
+
+  this.localRepeatCount = Math.max(1, (s.repeat_count || 0) + 1);
+  this.restartStageFrom(this.state.words);
+  this.banner = '';
+},
   },
   mounted() {
     this.shuffle();
